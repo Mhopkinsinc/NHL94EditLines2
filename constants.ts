@@ -1,0 +1,55 @@
+
+import type { Lineup } from './types';
+
+export const NHL_TEAMS_1994: string[] = [
+  'Mighty Ducks of Anaheim',
+  'Boston Bruins',
+  'Buffalo Sabres',
+  'Calgary Flames',
+  'Chicago Blackhawks',
+  'Dallas Stars',
+  'Detroit Red Wings',
+  'Edmonton Oilers',
+  'Florida Panthers',
+  'Hartford Whalers',
+  'Los Angeles Kings',
+  'Montreal Canadiens',
+  'New Jersey Devils',
+  'New York Islanders',
+  'New York Rangers',
+  'Ottawa Senators',
+  'Philadelphia Flyers',
+  'Pittsburgh Penguins',
+  'Quebec Nordiques',
+  'San Jose Sharks',
+  'St. Louis Blues',
+  'Tampa Bay Lightning',
+  'Toronto Maple Leafs',
+  'Vancouver Canucks',
+  'Washington Capitals',
+  'Winnipeg Jets',
+];
+
+export const INITIAL_LINEUP: Lineup = {
+  forwardLines: [
+    { LW: null, C: null, RW: null, EX: null },
+    { LW: null, C: null, RW: null, EX: null },
+    { LW: null, C: null, RW: null, EX: null },
+    { LW: null, C: null, RW: null, EX: null },
+    { LW: null, C: null, RW: null, EX: null },
+    { LW: null, C: null, RW: null, EX: null },
+    { LW: null, C: null, RW: null, EX: null },
+    { LW: null, C: null, RW: null, EX: null },
+  ],
+  defensePairings: [
+    { LD: null, RD: null, G: null },
+    { LD: null, RD: null, G: null },
+    { LD: null, RD: null, G: null },
+    { LD: null, RD: null, G: null },
+    { LD: null, RD: null, G: null },
+    { LD: null, RD: null, G: null },
+    { LD: null, RD: null, G: null },
+    { LD: null, RD: null, G: null },
+  ],
+  roster: [],
+};

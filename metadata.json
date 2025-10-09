@@ -1,0 +1,5 @@
+{
+  "name": "NHL 94 Team Lineup Editor",
+  "description": "A web application to manage hockey team lineups. Users can drag and drop players between different positions (Left Wing, Center, Right Wing) to organize their lines.",
+  "requestFramePermissions": []
+}

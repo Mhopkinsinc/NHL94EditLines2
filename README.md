@@ -1,11 +1,9 @@
-<div align="center">
+# NHL '94 Lineup Editor
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+This is a web application to manage and edit team lineups for the classic video game NHL '94. Users can drag and drop players between different lines and positions to organize their team.
 
-  <h1>Built with AI Studio</h2>
+## ROM Editing Resources
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+For detailed information on how to extract team and player data from an NHL '94 ROM file, please refer to the following resource:
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
-</div>
+- [NHL '94 ROM Editing Guide](https://nhl94.com/html/editing/edit_bin.php)
