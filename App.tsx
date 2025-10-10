@@ -1,7 +1,7 @@
 
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { driver } from 'driver.js';
+// FIX: Import `DriveStep` to correctly type the tour steps array, resolving a type incompatibility.
+import { driver, type DriveStep } from 'driver.js';
 import { INITIAL_LINEUP, NHL_TEAMS_1994 } from './constants';
 import type { Lineup, Player, PositionType, HistoryEntry } from './types';
 import { PositionSlot } from './components/PositionSlot';
@@ -10,9 +10,10 @@ import { PlayerSelectionModal } from './components/PlayerSelectionModal';
 import { TeamSelector } from './components/TeamSelector';
 import { AttributeCardModal } from './components/AttributeCardModal';
 import { parseRomData, RomData, parseAllTeams, TeamInfo, updateRomChecksum } from './rom-parser';
-import { EASportsIcon, HistoryIcon, SaveIcon, UploadIcon, UploadRomIcon } from './components/icons';
+import { EASportsLogo, HistoryIcon, InfoIcon, SaveIcon, SegaGenesisLogo, UploadIcon, UploadRomIcon } from './components/icons';
 import { RomInfoModal } from './components/RomInfoModal';
 import { HistoryModal } from './components/HistoryModal';
+import { AppInfoModal } from './components/AppInfoModal';
 
 type DragSource =
   | { type: 'FORWARD_LINE'; lineIndex: number; position: 'LW' | 'C' | 'RW' | 'EX' }
@@ -47,6 +48,7 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [romInfo, setRomInfo] = useState<{ data: RomData; teams: TeamInfo[] } | null>(null);
   const [isRomInfoModalOpen, setIsRomInfoModalOpen] = useState(false);
+  const [isAppInfoModalOpen, setIsAppInfoModalOpen] = useState(false);
   const [availableTeams, setAvailableTeams] = useState<string[]>([]);
   const [selectedTeamName, setSelectedTeamName] = useState<string>('');
   const [romBuffer, setRomBuffer] = useState<ArrayBuffer | null>(null);
@@ -139,7 +141,9 @@ const App: React.FC = () => {
     // A small timeout ensures that all components have rendered with data before starting the tour.
     if (isTourReady && romInfo && lineup.roster.length > 0) {
         setTimeout(() => {
-            const tourSteps = [
+            // FIX: Explicitly type `tourSteps` as `DriveStep[]` to fix the type error.
+            // This ensures the object shape matches what `driver.js` expects, particularly for `popover.side`.
+            const tourSteps: DriveStep[] = [
                 { 
                     element: '#tour-step-1', 
                     popover: { 
@@ -182,7 +186,21 @@ const App: React.FC = () => {
                         description: "Click the menu on a player card to remove the player or view their attributes.",
                         side: "right",
                         align: 'start'
-                    } 
+                    },
+                    onHighlightStarted: (element) => {
+                        const button = element?.querySelector('button');
+                        if (button) {
+                            // Add classes that mimic the hover state
+                            button.classList.add('bg-white/10', 'ring-2', 'ring-sky-400');
+                        }
+                    },
+                    onDeselected: (element) => {
+                        const button = element?.querySelector('button');
+                        if (button) {
+                            // Remove the hover-mimicking classes when the step is done
+                            button.classList.remove('bg-white/10', 'ring-2', 'ring-sky-400');
+                        }
+                    }
                 },
                 { 
                     element: '#tour-step-7', 
@@ -195,7 +213,7 @@ const App: React.FC = () => {
                 }
             ];
 
-            const availableSteps = tourSteps.filter(step => document.querySelector(step.element));
+            const availableSteps = tourSteps.filter(step => step.element && document.querySelector(step.element as string));
 
             if (availableSteps.length > 0) {
                  const driverObj = driver({
@@ -245,6 +263,14 @@ const App: React.FC = () => {
 
   const handleCloseRomInfoModal = useCallback(() => {
     setIsRomInfoModalOpen(false);
+  }, []);
+
+  const handleOpenAppInfoModal = useCallback(() => {
+    setIsAppInfoModalOpen(true);
+  }, []);
+
+  const handleCloseAppInfoModal = useCallback(() => {
+      setIsAppInfoModalOpen(false);
   }, []);
   
   const handleOpenHistoryModal = useCallback(() => {
@@ -701,235 +727,257 @@ const App: React.FC = () => {
   const defensePositions: ('LD' | 'RD' | 'G')[] = ['LD', 'RD', 'G'];
 
   return (
-    <div className="min-h-screen text-white font-sans p-4 md:p-8" onDragEnd={handleDragEnd}>
-      <main className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center">
-          {/* Controls Row */}
-          <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-            Team
-          </div>
-          
-          <div id="tour-step-1">
-            <TeamSelector 
-              teams={availableTeams} 
-              selectedTeamName={selectedTeamName} 
-              onTeamChange={handleTeamChange}
-              disabled={!romInfo}
-            />
-          </div>
+    <div className="min-h-screen text-white font-sans" onDragEnd={handleDragEnd}>
+        <header className="bg-[#1A222C] py-2 px-4 md:px-8 flex justify-between items-center shadow-lg border-b border-black/30">
+            <div className="text-lg font-bold tracking-wider text-gray-300">
+                94' Team Line Editor & Player Viewer
+            </div>
+            <div className="flex items-center gap-4">
+                <SegaGenesisLogo aria-label="Sega Genesis Logo" className="h-6 text-white" />
+                <div className="text-white font-semibold text-sm">
+                    SEGA | v.2025.10.10
+                </div>
+                <button 
+                    onClick={handleOpenAppInfoModal}
+                    className="bg-gray-700/50 hover:bg-gray-600/50 p-1.5 rounded-full transition-colors"
+                    aria-label="Show App Information"
+                    title="About this application"
+                >
+                    <InfoIcon className="w-5 h-5 text-white" />
+                </button>
+            </div>
+        </header>
 
-          <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end gap-6">
-            <div className="flex items-center">
-                <label htmlFor="all-lines-toggle" className="mr-3 text-sm font-medium text-gray-300 select-none">Show 'All' Lines</label>
-                <input
-                    id="all-lines-toggle"
-                    type="checkbox"
-                    checked={showAllLines}
-                    onChange={() => setShowAllLines(!showAllLines)}
-                    className="w-4 h-4 text-sky-500 bg-gray-700 border-gray-600 rounded focus:ring-sky-600 ring-offset-gray-800 focus:ring-2 cursor-pointer disabled:opacity-50"
-                    disabled={!romInfo}
-                />
+      <div className="p-4 md:p-8">
+        <main className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center">
+            {/* Controls Row */}
+            <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
+              Team
+            </div>
+            
+            <div id="tour-step-1">
+              <TeamSelector 
+                teams={availableTeams} 
+                selectedTeamName={selectedTeamName} 
+                onTeamChange={handleTeamChange}
+                disabled={!romInfo}
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  className="hidden"
-                  accept=".bin,.md,.gen"
-                  aria-hidden="true"
-              />
-              <button
-                  id="tour-step-2"
-                  onClick={handleSaveChanges}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5"
-                  disabled={!isDirty}
-                  title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
+            <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end gap-6">
+              <div className="flex items-center">
+                  <label htmlFor="all-lines-toggle" className="mr-3 text-sm font-medium text-gray-300 select-none">Show 'All' Lines</label>
+                  <input
+                      id="all-lines-toggle"
+                      type="checkbox"
+                      checked={showAllLines}
+                      onChange={() => setShowAllLines(!showAllLines)}
+                      className="w-4 h-4 text-sky-500 bg-gray-700 border-gray-600 rounded focus:ring-sky-600 ring-offset-gray-800 focus:ring-2 cursor-pointer disabled:opacity-50"
+                      disabled={!romInfo}
+                  />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept=".bin,.md,.gen"
+                    aria-hidden="true"
+                />
+                <button
+                    id="tour-step-2"
+                    onClick={handleSaveChanges}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5"
+                    disabled={!isDirty}
+                    title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
+                >
+                    <SaveIcon className="w-4 h-4" />
+                    Save ROM
+                </button>
+                {romInfo && (
+                    <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
+                         <button
+                            id="tour-step-3"
+                            onClick={handleOpenHistoryModal}
+                            className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
+                            aria-label="Show Change History"
+                            disabled={historyLog.length === 0}
+                            title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
+                        >
+                            <HistoryIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                            id="tour-step-4"
+                            onClick={handleOpenRomInfoModal}
+                            className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
+                            aria-label="Show ROM Information"
+                            title="Click this icon to view detailed information about the loaded ROM"
+                        >
+                            <EASportsLogo className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="col-span-full h-2" />
+          </div>
+          
+          {!romInfo ? (
+              <div 
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDropOnWelcome}
+                  className={`relative text-center py-20 bg-[#2B3544] rounded-lg mt-4 transition-all duration-300 border-4 ${isDraggingOver ? 'border-dashed border-sky-400 scale-105 bg-sky-900/50' : 'border-transparent'}`}
               >
-                  <SaveIcon className="w-4 h-4" />
-                  Save ROM
-              </button>
-              {romInfo && (
-                  <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
-                       <button
-                          id="tour-step-3"
-                          onClick={handleOpenHistoryModal}
-                          className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
-                          aria-label="Show Change History"
-                          disabled={historyLog.length === 0}
-                          title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
-                      >
-                          <HistoryIcon className="w-5 h-5" />
-                      </button>
+                  <div className={`transition-opacity duration-300 ${isDraggingOver ? 'opacity-0' : 'opacity-100'} flex flex-col items-center px-4`}>
+                      <h1 className="text-5xl font-extrabold text-sky-300 mb-4" style={{textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 10px rgba(125, 211, 252, 0.3)'}}> NHL 94 Line Editor </h1>
+                      <UploadRomIcon className="w-16 h-16 text-gray-500 mb-4" />
+                      <h2 className="text-3xl font-bold mb-2">Upload your ROM file</h2>
+                      <p className="text-gray-400 mb-6">
+                          Drag & drop a 
+                          <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.bin</code>, 
+                          <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.md</code>, or 
+                          <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.gen</code> file here
+                      </p>
+                      <p className="text-gray-500 mb-4">or</p>
                       <button
-                          id="tour-step-4"
-                          onClick={handleOpenRomInfoModal}
-                          className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
-                          aria-label="Show ROM Information"
-                          title="Click this icon to view detailed information about the loaded ROM"
+                          onClick={handleUploadClick}
+                          className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-6 rounded-md transition-colors"
                       >
-                          <EASportsIcon className="w-5 h-5 text-white" />
+                          Browse Files
                       </button>
                   </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="col-span-full h-2" />
-        </div>
-        
-        {!romInfo ? (
-            <div 
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDragOver={handleDragOver}
-                onDrop={handleDropOnWelcome}
-                className={`relative text-center py-20 bg-[#2B3544] rounded-lg mt-4 transition-all duration-300 border-4 ${isDraggingOver ? 'border-dashed border-sky-400 scale-105 bg-sky-900/50' : 'border-transparent'}`}
-            >
-                <div className={`transition-opacity duration-300 ${isDraggingOver ? 'opacity-0' : 'opacity-100'} flex flex-col items-center px-4`}>
-                    <h1 className="text-5xl font-extrabold text-sky-300 mb-4" style={{textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 10px rgba(125, 211, 252, 0.3)'}}> NHL 94 Line Editor </h1>
-                    <UploadRomIcon className="w-16 h-16 text-gray-500 mb-4" />
-                    <h2 className="text-3xl font-bold mb-2">Upload your ROM file</h2>
-                    <p className="text-gray-400 mb-6">
-                        Drag & drop a 
-                        <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.bin</code>, 
-                        <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.md</code>, or 
-                        <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.gen</code> file here
-                    </p>
-                    <p className="text-gray-500 mb-4">or</p>
-                    <button
-                        onClick={handleUploadClick}
-                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-6 rounded-md transition-colors"
-                    >
-                        Browse Files
-                    </button>
-                </div>
-                 <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isDraggingOver ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} aria-hidden={!isDraggingOver}>
-                    <UploadIcon className="w-16 h-16 text-sky-400 mb-4" />
-                    <p className="text-2xl font-bold text-sky-300">Drop ROM file to begin!</p>
-                </div>
-            </div>
-        ) : lineup.roster.length === 0 ? (
-             <div className="text-center py-20 bg-[#2B3544] rounded-lg mt-4">
-                <h2 className="text-2xl font-bold mb-4">No Team Selected</h2>
-                <p className="text-gray-400">Select a team from the dropdown to view and edit their lineup.</p>
-            </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center" id="tour-step-5">
-              {/* Forwards Headers */}
-              <div />
-              <h5 className="font-semibold text-center text-gray-300 text-sm">Left Wing</h5>
-              <h5 className="font-semibold text-center text-gray-300 text-sm">Center</h5>
-              <h5 className="font-semibold text-center text-gray-300 text-sm">Right Wing</h5>
-              <h5 className="font-semibold text-center text-gray-300 text-sm">Extra Attacker</h5>
+                   <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isDraggingOver ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} aria-hidden={!isDraggingOver}>
+                      <UploadIcon className="w-16 h-16 text-sky-400 mb-4" />
+                      <p className="text-2xl font-bold text-sky-300">Drop ROM file to begin!</p>
+                  </div>
+              </div>
+          ) : lineup.roster.length === 0 ? (
+               <div className="text-center py-20 bg-[#2B3544] rounded-lg mt-4">
+                  <h2 className="text-2xl font-bold mb-4">No Team Selected</h2>
+                  <p className="text-gray-400">Select a team from the dropdown to view and edit their lineup.</p>
+              </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center" id="tour-step-5">
+                {/* Forwards Headers */}
+                <div />
+                <h5 className="font-semibold text-center text-gray-300 text-sm">Left Wing</h5>
+                <h5 className="font-semibold text-center text-gray-300 text-sm">Center</h5>
+                <h5 className="font-semibold text-center text-gray-300 text-sm">Right Wing</h5>
+                <h5 className="font-semibold text-center text-gray-300 text-sm">Extra Attacker</h5>
 
-              {/* Forward Lines */}
-              {lineup.forwardLines.map((forwardLine, lineIndex) => {
-                if (!showAllLines && forwardLineLabels[lineIndex] !== 'NLC') {
-                    return null;
-                }
-                return (
-                    <React.Fragment key={`fwd-line-${lineIndex}`}>
-                      <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-                        {forwardLineLabels[lineIndex]}
-                      </div>
-                      {forwardPositions.map((position) => {
-                        const menuId = `fwd-${lineIndex}-${position}`;
-                        const isTourStepTarget = lineIndex === 0 && position === 'LW';
-                        return (
-                          <PositionSlot
-                            key={`${lineIndex}-${position}`}
-                            index={lineIndex}
-                            positionType={position}
-                            player={forwardLine[position]}
-                            onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'FORWARD_LINE', lineIndex: idx, position: pos as 'LW'|'C'|'RW'|'EX' })}
-                            onDrop={(idx, pos) => handleDrop({ type: 'FORWARD_LINE', lineIndex: idx, position: pos as 'LW'|'C'|'RW'|'EX' })}
-                            onRemove={(idx, pos) => handleRemovePlayer('forward', idx, pos)}
-                            onEmptyClick={() => handleOpenPlayerSelection('forward', lineIndex, position)}
-                            onViewAttributes={handleOpenAttributeModal}
-                            isDragSource={getIsDragSource('FORWARD_LINE', lineIndex, position)}
-                            draggedPlayer={draggedItem?.player}
-                            menuId={menuId}
-                            isMenuOpen={openMenuId === menuId}
-                            onToggleMenu={handleToggleMenu}
-                            onCloseMenu={handleCloseMenus}
-                            selectedTeamName={selectedTeamName}
-                            isTourStep={isTourStepTarget && !!forwardLine[position]}
-                          />
-                        );
-                      })}
-                    </React.Fragment>
-                )
-              })}
-              
-              {/* Spacer */}
-              <div className="h-4 col-span-5" />
-
-              {/* Defense Headers */}
-              <div />
-              <h5 className="font-semibold text-center text-gray-300 text-sm">Left Defense</h5>
-              <h5 className="font-semibold text-center text-gray-300 text-sm">Right Defense</h5>
-              <h5 className="font-semibold text-center text-gray-300 text-sm">Goalie</h5>
-              <div />
-
-              {/* Defense Pairings */}
-              {lineup.defensePairings.map((defensePair, pairIndex) => {
-                 if (!showAllLines && defensePairingLabels[pairIndex] !== 'NLC') {
-                    return null;
-                }
-                return (
-                    <React.Fragment key={`def-pair-${pairIndex}`}>
+                {/* Forward Lines */}
+                {lineup.forwardLines.map((forwardLine, lineIndex) => {
+                  if (!showAllLines && forwardLineLabels[lineIndex] !== 'NLC') {
+                      return null;
+                  }
+                  return (
+                      <React.Fragment key={`fwd-line-${lineIndex}`}>
                         <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-                        {defensePairingLabels[pairIndex]}
+                          {forwardLineLabels[lineIndex]}
                         </div>
-                        {defensePositions.map((position) => {
-                          const menuId = `def-${pairIndex}-${position}`;
+                        {forwardPositions.map((position) => {
+                          const menuId = `fwd-${lineIndex}-${position}`;
+                          const isTourStepTarget = lineIndex === 0 && position === 'LW';
                           return (
                             <PositionSlot
-                                key={`${pairIndex}-${position}`}
-                                index={pairIndex}
-                                positionType={position}
-                                player={defensePair[position]}
-                                onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
-                                onDrop={(idx, pos) => handleDrop({ type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
-                                onRemove={(idx, pos) => handleRemovePlayer('defense', idx, pos)}
-                                onEmptyClick={() => handleOpenPlayerSelection('defense', pairIndex, position)}
-                                onViewAttributes={handleOpenAttributeModal}
-                                isDragSource={getIsDragSource('DEFENSE_PAIRING', pairIndex, position)}
-                                draggedPlayer={draggedItem?.player}
-                                menuId={menuId}
-                                isMenuOpen={openMenuId === menuId}
-                                onToggleMenu={handleToggleMenu}
-                                onCloseMenu={handleCloseMenus}
-                                selectedTeamName={selectedTeamName}
+                              key={`${lineIndex}-${position}`}
+                              index={lineIndex}
+                              positionType={position}
+                              player={forwardLine[position]}
+                              onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'FORWARD_LINE', lineIndex: idx, position: pos as 'LW'|'C'|'RW'|'EX' })}
+                              onDrop={(idx, pos) => handleDrop({ type: 'FORWARD_LINE', lineIndex: idx, position: pos as 'LW'|'C'|'RW'|'EX' })}
+                              onRemove={(idx, pos) => handleRemovePlayer('forward', idx, pos)}
+                              onEmptyClick={() => handleOpenPlayerSelection('forward', lineIndex, position)}
+                              onViewAttributes={handleOpenAttributeModal}
+                              isDragSource={getIsDragSource('FORWARD_LINE', lineIndex, position)}
+                              draggedPlayer={draggedItem?.player}
+                              menuId={menuId}
+                              isMenuOpen={openMenuId === menuId}
+                              onToggleMenu={handleToggleMenu}
+                              onCloseMenu={handleCloseMenus}
+                              selectedTeamName={selectedTeamName}
+                              isTourStep={isTourStepTarget && !!forwardLine[position]}
                             />
                           );
                         })}
-                        <div />
-                    </React.Fragment>
-                )
-              })}
-            </div>
+                      </React.Fragment>
+                  )
+                })}
+                
+                {/* Spacer */}
+                <div className="h-4 col-span-5" />
 
-            <div>
-                <Roster 
-                  players={lineup.roster}
-                  onDragStart={(player, pIdx) => handleDragStart(player, { type: 'ROSTER', playerIndex: pIdx })}
-                  onDrop={() => handleDrop({ type: 'ROSTER' })}
-                  onViewAttributes={handleOpenAttributeModal}
-                  isDragSource={getIsDragSource('ROSTER')}
-                  draggedPlayer={draggedItem?.player}
-                  openMenuId={openMenuId}
-                  onToggleMenu={handleToggleMenu}
-                  onCloseMenu={handleCloseMenus}
-                  selectedTeamName={selectedTeamName}
-                />
-            </div>
-          </>
-        )}
-      </main>
+                {/* Defense Headers */}
+                <div />
+                <h5 className="font-semibold text-center text-gray-300 text-sm">Left Defense</h5>
+                <h5 className="font-semibold text-center text-gray-300 text-sm">Right Defense</h5>
+                <h5 className="font-semibold text-center text-gray-300 text-sm">Goalie</h5>
+                <div />
+
+                {/* Defense Pairings */}
+                {lineup.defensePairings.map((defensePair, pairIndex) => {
+                   if (!showAllLines && defensePairingLabels[pairIndex] !== 'NLC') {
+                      return null;
+                  }
+                  return (
+                      <React.Fragment key={`def-pair-${pairIndex}`}>
+                          <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
+                          {defensePairingLabels[pairIndex]}
+                          </div>
+                          {defensePositions.map((position) => {
+                            const menuId = `def-${pairIndex}-${position}`;
+                            return (
+                              <PositionSlot
+                                  key={`${pairIndex}-${position}`}
+                                  index={pairIndex}
+                                  positionType={position}
+                                  player={defensePair[position]}
+                                  onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
+                                  onDrop={(idx, pos) => handleDrop({ type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
+                                  onRemove={(idx, pos) => handleRemovePlayer('defense', idx, pos)}
+                                  onEmptyClick={() => handleOpenPlayerSelection('defense', pairIndex, position)}
+                                  onViewAttributes={handleOpenAttributeModal}
+                                  isDragSource={getIsDragSource('DEFENSE_PAIRING', pairIndex, position)}
+                                  draggedPlayer={draggedItem?.player}
+                                  menuId={menuId}
+                                  isMenuOpen={openMenuId === menuId}
+                                  onToggleMenu={handleToggleMenu}
+                                  onCloseMenu={handleCloseMenus}
+                                  selectedTeamName={selectedTeamName}
+                              />
+                            );
+                          })}
+                          <div />
+                      </React.Fragment>
+                  )
+                })}
+              </div>
+
+              <div>
+                  <Roster 
+                    players={lineup.roster}
+                    onDragStart={(player, pIdx) => handleDragStart(player, { type: 'ROSTER', playerIndex: pIdx })}
+                    onDrop={() => handleDrop({ type: 'ROSTER' })}
+                    onViewAttributes={handleOpenAttributeModal}
+                    isDragSource={getIsDragSource('ROSTER')}
+                    draggedPlayer={draggedItem?.player}
+                    openMenuId={openMenuId}
+                    onToggleMenu={handleToggleMenu}
+                    onCloseMenu={handleCloseMenus}
+                    selectedTeamName={selectedTeamName}
+                  />
+              </div>
+            </>
+          )}
+        </main>
+      </div>
       {selectingForSlot && (
         <PlayerSelectionModal
             roster={lineup.roster}
@@ -959,6 +1007,9 @@ const App: React.FC = () => {
             onClose={handleCloseHistoryModal}
             onUndo={handleUndo}
         />
+      )}
+      {isAppInfoModalOpen && (
+        <AppInfoModal onClose={handleCloseAppInfoModal} />
       )}
     </div>
   );
