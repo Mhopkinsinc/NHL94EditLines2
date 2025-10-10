@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { INITIAL_LINEUP, NHL_TEAMS_1994 } from './constants';
 import type { Lineup, Player, PositionType, HistoryEntry } from './types';
@@ -251,29 +252,29 @@ const App: React.FC = () => {
   const applyChange = (updater: (lineup: Lineup) => Lineup, description: string) => {
     if (!selectedTeamName) return;
 
-    setLineup(prevLineup => {
-        // 1. Log the change using the state BEFORE the update.
-        const newEntry: HistoryEntry = {
-          id: `${Date.now()}-${Math.random()}`,
-          timestamp: new Date(),
-          teamName: selectedTeamName,
-          description,
-          previousLineup: prevLineup, // The snapshot
-        };
-        setHistoryLog(prevLog => [newEntry, ...prevLog]);
+    // This function is structured to be compatible with React's StrictMode.
+    // State updates are separated to avoid side-effects within a single state setter,
+    // which prevents issues like duplicate history entries in development mode.
 
-        // 2. Apply the update
-        const newLineup = updater(prevLineup);
+    // 1. Calculate the new lineup based on the current state.
+    const newLineup = updater(lineup);
 
-        // 3. Update the modified lineups map
-        setModifiedLineups(prevModified => ({
-            ...prevModified,
-            [selectedTeamName]: newLineup
-        }));
+    // 2. Create a history entry using the state *before* the update.
+    const newEntry: HistoryEntry = {
+      id: `${Date.now()}-${Math.random()}`,
+      timestamp: new Date(),
+      teamName: selectedTeamName,
+      description,
+      previousLineup: lineup, // This is the snapshot of the state before the change.
+    };
 
-        // 4. Return the new state for the main lineup
-        return newLineup;
-    });
+    // 3. Call all state setters separately. React will batch these updates.
+    setHistoryLog(prevLog => [newEntry, ...prevLog]);
+    setModifiedLineups(prevModified => ({
+      ...prevModified,
+      [selectedTeamName]: newLineup,
+    }));
+    setLineup(newLineup);
   };
 
   const handleSaveChanges = useCallback(() => {
@@ -365,7 +366,7 @@ const App: React.FC = () => {
     }, description);
     
     handleClosePlayerSelection();
-  }, [selectingForSlot, handleClosePlayerSelection, selectedTeamName]);
+  }, [selectingForSlot, handleClosePlayerSelection, selectedTeamName, lineup]);
 
   const handleDragStart = useCallback((player: Player, source: DragSource) => {
     setDraggedItem({ player, source });
