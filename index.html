@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hockey Lineup Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/intro.js/introjs.css" rel="stylesheet">
+    <style>
+      /* Custom override for Intro.js to ensure text is readable against the default white tooltip. */
+      .introjs-tooltip {
+        color: #333;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
@@ -19,6 +25,7 @@
 </head>
   <body class="bg-[#212934]">
     <div id="root"></div>
+    <script src="https://unpkg.com/intro.js/intro.js"></script>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -18,9 +18,10 @@ interface PositionSlotProps {
   onToggleMenu: (menuId: string) => void;
   onCloseMenu: () => void;
   selectedTeamName: string;
+  isTourStep?: boolean;
 }
 
-export const PositionSlot: React.FC<PositionSlotProps> = ({ index, positionType, player, onDragStart, onDrop, onRemove, onEmptyClick, onViewAttributes, isDragSource, draggedPlayer, menuId, isMenuOpen, onToggleMenu, onCloseMenu, selectedTeamName }) => {
+export const PositionSlot: React.FC<PositionSlotProps> = ({ index, positionType, player, onDragStart, onDrop, onRemove, onEmptyClick, onViewAttributes, isDragSource, draggedPlayer, menuId, isMenuOpen, onToggleMenu, onCloseMenu, selectedTeamName, isTourStep }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const canDrop = useMemo(() => {
@@ -126,6 +127,7 @@ export const PositionSlot: React.FC<PositionSlotProps> = ({ index, positionType,
           onToggleMenu={() => onToggleMenu(menuId)}
           onCloseMenu={onCloseMenu}
           selectedTeamName={selectedTeamName}
+          isTourStep={isTourStep}
         />
       ) : showGhost && draggedPlayer ? (
         <PlayerCard player={draggedPlayer} isGhost selectedTeamName={selectedTeamName} />

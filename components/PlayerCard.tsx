@@ -13,6 +13,7 @@ interface PlayerCardProps {
   onToggleMenu?: () => void;
   onCloseMenu?: () => void;
   selectedTeamName?: string;
+  isTourStep?: boolean;
 }
 
 const getLastName = (name: string): string => {
@@ -35,7 +36,7 @@ const PlayerStatusIcon: React.FC<{ status?: string }> = ({ status }) => {
 };
 
 
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onRemove, onViewAttributes, isDragging, isGhost, menuOpen, onToggleMenu, onCloseMenu, selectedTeamName }) => {
+export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onRemove, onViewAttributes, isDragging, isGhost, menuOpen, onToggleMenu, onCloseMenu, selectedTeamName, isTourStep }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const isGoalie = player.role === 'Goalie';
 
@@ -175,7 +176,15 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
                         {isHeavyweight && player.statusIcon !== 'anchor' && <AnchorIcon className="w-5 h-5 text-white" title="Heavyweight" />}
                         {isLightweight && <FeatherIcon className="w-5 h-5 text-white" title="Lightweight" />}
                         {onToggleMenu && (
-                            <div ref={menuRef} className="relative">
+                            <div
+                                ref={menuRef}
+                                className="relative"
+                                {...(isTourStep && {
+                                    'data-step': '6',
+                                    'data-intro': "Click the menu on a player card to remove the player or view their attributes.",
+                                    'data-position': 'right',
+                                })}
+                            >
                                 <button
                                     onMouseDown={(e) => e.stopPropagation()} // Prevents drag from starting on menu click
                                     onClick={handleToggleMenu}

@@ -36,7 +36,7 @@ const AttributeBar: React.FC<AttributeBarProps> = ({ label, value }) => {
             </div>
         </div>
     );
-};
+}; 
 
 
 const AttributeCategory: React.FC<{

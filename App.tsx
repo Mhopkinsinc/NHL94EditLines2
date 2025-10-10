@@ -11,6 +11,8 @@ import { EASportsIcon, HistoryIcon, SaveIcon, UploadIcon, UploadRomIcon } from '
 import { RomInfoModal } from './components/RomInfoModal';
 import { HistoryModal } from './components/HistoryModal';
 
+declare const introJs: any;
+
 type DragSource =
   | { type: 'FORWARD_LINE'; lineIndex: number; position: 'LW' | 'C' | 'RW' | 'EX' }
   | { type: 'DEFENSE_PAIRING'; pairIndex: number; position: 'LD' | 'RD' | 'G' }
@@ -51,6 +53,7 @@ const App: React.FC = () => {
   const [historyLog, setHistoryLog] = useState<HistoryEntry[]>([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isTourReady, setIsTourReady] = useState(false);
   const isDirty = Object.keys(modifiedLineups).length > 0;
 
   const forwardLineLabels = ['Best', 'L1', 'L2', 'Chk', 'PP1', 'PP2', 'PK1', 'PK2'];
@@ -131,6 +134,20 @@ const App: React.FC = () => {
     }
   }, [selectedTeamName, romInfo, modifiedLineups]);
 
+  useEffect(() => {
+    // A small timeout ensures that all components have rendered with data before starting the tour.
+    if (isTourReady && romInfo && lineup.roster.length > 0) {
+        setTimeout(() => {
+            introJs.tour().oncomplete(() => {
+                sessionStorage.setItem('nhl94-tour-shown', 'true');
+            }).onexit(() => {
+                sessionStorage.setItem('nhl94-tour-shown', 'true');
+            }).start();
+        }, 500);
+        setIsTourReady(false); // Reset the trigger
+    }
+  }, [isTourReady, romInfo, lineup]);
+
 
   const handleToggleMenu = useCallback((menuId: string) => {
     setOpenMenuId(prevId => (prevId === menuId ? null : menuId));
@@ -194,6 +211,11 @@ const App: React.FC = () => {
             }
             setRomInfo({ data: parsedData, teams });
             console.log('Parsed Team Data:', teams);
+
+            const tourShown = sessionStorage.getItem('nhl94-tour-shown');
+            if (!tourShown) {
+                setIsTourReady(true);
+            }
         } else {
             setRomInfo(null);
             setAvailableTeams([]);
@@ -599,12 +621,14 @@ const App: React.FC = () => {
             Team
           </div>
           
-          <TeamSelector 
-            teams={availableTeams} 
-            selectedTeamName={selectedTeamName} 
-            onTeamChange={handleTeamChange}
-            disabled={!romInfo}
-          />
+          <div data-step="1" data-intro="Welcome! Start by selecting a team from this dropdown to view and edit their lineup.">
+            <TeamSelector 
+              teams={availableTeams} 
+              selectedTeamName={selectedTeamName} 
+              onTeamChange={handleTeamChange}
+              disabled={!romInfo}
+            />
+          </div>
 
           <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end gap-6">
             <div className="flex items-center">
@@ -633,6 +657,8 @@ const App: React.FC = () => {
                   className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5"
                   disabled={!isDirty}
                   title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
+                  data-step="2"
+                  data-intro="When you're finished, click 'Save ROM' to download a new file with all your changes."
               >
                   <SaveIcon className="w-4 h-4" />
                   Save ROM
@@ -645,6 +671,8 @@ const App: React.FC = () => {
                           aria-label="Show Change History"
                           disabled={historyLog.length === 0}
                           title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
+                          data-step="3"
+                          data-intro="Every change you make is tracked. Click this icon to view your edit history and undo any actions."
                       >
                           <HistoryIcon className="w-5 h-5" />
                       </button>
@@ -652,6 +680,8 @@ const App: React.FC = () => {
                           onClick={handleOpenRomInfoModal}
                           className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
                           aria-label="Show ROM Information"
+                          data-step="4"
+                          data-intro="Click this icon to view detailed information about the loaded ROM, including all teams and players found."
                       >
                           <EASportsIcon className="w-5 h-5 text-white" />
                       </button>
@@ -701,7 +731,7 @@ const App: React.FC = () => {
             </div>
         ) : (
           <>
-            <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center">
+            <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center" data-step="5" data-intro="This is the lineup grid. Active players are shown in their assigned positions.">
               {/* Forwards Headers */}
               <div />
               <h5 className="font-semibold text-center text-gray-300 text-sm">Left Wing</h5>
@@ -721,6 +751,7 @@ const App: React.FC = () => {
                       </div>
                       {forwardPositions.map((position) => {
                         const menuId = `fwd-${lineIndex}-${position}`;
+                        const isTourStepTarget = lineIndex === 0 && position === 'LW';
                         return (
                           <PositionSlot
                             key={`${lineIndex}-${position}`}
@@ -739,6 +770,7 @@ const App: React.FC = () => {
                             onToggleMenu={handleToggleMenu}
                             onCloseMenu={handleCloseMenus}
                             selectedTeamName={selectedTeamName}
+                            isTourStep={isTourStepTarget && !!forwardLine[position]}
                           />
                         );
                       })}
@@ -795,18 +827,20 @@ const App: React.FC = () => {
               })}
             </div>
 
-            <Roster 
-              players={lineup.roster}
-              onDragStart={(player, pIdx) => handleDragStart(player, { type: 'ROSTER', playerIndex: pIdx })}
-              onDrop={() => handleDrop({ type: 'ROSTER' })}
-              onViewAttributes={handleOpenAttributeModal}
-              isDragSource={getIsDragSource('ROSTER')}
-              draggedPlayer={draggedItem?.player}
-              openMenuId={openMenuId}
-              onToggleMenu={handleToggleMenu}
-              onCloseMenu={handleCloseMenus}
-              selectedTeamName={selectedTeamName}
-            />
+            <div data-step="7" data-position="top" data-intro="This is the full roster. Drag a player from here and drop them into an empty slot on the lineup grid.">
+                <Roster 
+                  players={lineup.roster}
+                  onDragStart={(player, pIdx) => handleDragStart(player, { type: 'ROSTER', playerIndex: pIdx })}
+                  onDrop={() => handleDrop({ type: 'ROSTER' })}
+                  onViewAttributes={handleOpenAttributeModal}
+                  isDragSource={getIsDragSource('ROSTER')}
+                  draggedPlayer={draggedItem?.player}
+                  openMenuId={openMenuId}
+                  onToggleMenu={handleToggleMenu}
+                  onCloseMenu={handleCloseMenus}
+                  selectedTeamName={selectedTeamName}
+                />
+            </div>
           </>
         )}
       </main>
