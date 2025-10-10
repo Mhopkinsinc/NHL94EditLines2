@@ -1,4 +1,7 @@
+
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { driver } from 'driver.js';
 import { INITIAL_LINEUP, NHL_TEAMS_1994 } from './constants';
 import type { Lineup, Player, PositionType, HistoryEntry } from './types';
 import { PositionSlot } from './components/PositionSlot';
@@ -10,8 +13,6 @@ import { parseRomData, RomData, parseAllTeams, TeamInfo, updateRomChecksum } fro
 import { EASportsIcon, HistoryIcon, SaveIcon, UploadIcon, UploadRomIcon } from './components/icons';
 import { RomInfoModal } from './components/RomInfoModal';
 import { HistoryModal } from './components/HistoryModal';
-
-declare const introJs: any;
 
 type DragSource =
   | { type: 'FORWARD_LINE'; lineIndex: number; position: 'LW' | 'C' | 'RW' | 'EX' }
@@ -138,11 +139,76 @@ const App: React.FC = () => {
     // A small timeout ensures that all components have rendered with data before starting the tour.
     if (isTourReady && romInfo && lineup.roster.length > 0) {
         setTimeout(() => {
-            introJs.tour().oncomplete(() => {
-                sessionStorage.setItem('nhl94-tour-shown', 'true');
-            }).onexit(() => {
-                sessionStorage.setItem('nhl94-tour-shown', 'true');
-            }).start();
+            const tourSteps = [
+                { 
+                    element: '#tour-step-1', 
+                    popover: { 
+                        title: 'Select a Team', 
+                        description: "Welcome! Start by selecting a team from this dropdown to view and edit their lineup." 
+                    } 
+                },
+                { 
+                    element: '#tour-step-2', 
+                    popover: { 
+                        title: 'Save Your Work', 
+                        description: "When you're finished, click 'Save ROM' to download a new file with all your changes." 
+                    } 
+                },
+                { 
+                    element: '#tour-step-3', 
+                    popover: { 
+                        title: 'Track Changes', 
+                        description: 'Every change you make is tracked. Click this icon to view your edit history and undo any actions.' 
+                    } 
+                },
+                { 
+                    element: '#tour-step-4', 
+                    popover: { 
+                        title: 'View ROM Info', 
+                        description: 'Click this icon to view detailed information about the loaded ROM, including all teams and players found.' 
+                    } 
+                },
+                { 
+                    element: '#tour-step-5', 
+                    popover: { 
+                        title: 'The Lineup Grid', 
+                        description: 'This is the lineup grid. Active players are shown in their assigned positions.' 
+                    } 
+                },
+                { 
+                    element: '#tour-step-6', 
+                    popover: { 
+                        title: 'Player Options', 
+                        description: "Click the menu on a player card to remove the player or view their attributes.",
+                        side: "right",
+                        align: 'start'
+                    } 
+                },
+                { 
+                    element: '#tour-step-7', 
+                    popover: { 
+                        title: 'The Roster', 
+                        description: 'This is the full roster, organized by position. Drag a player from here and drop them into an empty slot on the lineup grid.',
+                        side: "top",
+                        align: 'start'
+                    } 
+                }
+            ];
+
+            const availableSteps = tourSteps.filter(step => document.querySelector(step.element));
+
+            if (availableSteps.length > 0) {
+                 const driverObj = driver({
+                    showProgress: true,
+                    onDestroyed: () => {
+                        localStorage.setItem('nhl94-tour-shown', 'true');
+                    },
+                    steps: availableSteps,
+                });
+                driverObj.drive();
+            } else {
+                localStorage.setItem('nhl94-tour-shown', 'true');
+            }
         }, 500);
         setIsTourReady(false); // Reset the trigger
     }
@@ -212,7 +278,7 @@ const App: React.FC = () => {
             setRomInfo({ data: parsedData, teams });
             console.log('Parsed Team Data:', teams);
 
-            const tourShown = sessionStorage.getItem('nhl94-tour-shown');
+            const tourShown = localStorage.getItem('nhl94-tour-shown');
             if (!tourShown) {
                 setIsTourReady(true);
             }
@@ -643,7 +709,7 @@ const App: React.FC = () => {
             Team
           </div>
           
-          <div data-step="1" data-intro="Welcome! Start by selecting a team from this dropdown to view and edit their lineup.">
+          <div id="tour-step-1">
             <TeamSelector 
               teams={availableTeams} 
               selectedTeamName={selectedTeamName} 
@@ -675,12 +741,11 @@ const App: React.FC = () => {
                   aria-hidden="true"
               />
               <button
+                  id="tour-step-2"
                   onClick={handleSaveChanges}
                   className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5"
                   disabled={!isDirty}
                   title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
-                  data-step="2"
-                  data-intro="When you're finished, click 'Save ROM' to download a new file with all your changes."
               >
                   <SaveIcon className="w-4 h-4" />
                   Save ROM
@@ -688,22 +753,21 @@ const App: React.FC = () => {
               {romInfo && (
                   <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
                        <button
+                          id="tour-step-3"
                           onClick={handleOpenHistoryModal}
                           className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
                           aria-label="Show Change History"
                           disabled={historyLog.length === 0}
                           title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
-                          data-step="3"
-                          data-intro="Every change you make is tracked. Click this icon to view your edit history and undo any actions."
                       >
                           <HistoryIcon className="w-5 h-5" />
                       </button>
                       <button
+                          id="tour-step-4"
                           onClick={handleOpenRomInfoModal}
                           className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
                           aria-label="Show ROM Information"
-                          data-step="4"
-                          data-intro="Click this icon to view detailed information about the loaded ROM, including all teams and players found."
+                          title="Click this icon to view detailed information about the loaded ROM"
                       >
                           <EASportsIcon className="w-5 h-5 text-white" />
                       </button>
@@ -753,7 +817,7 @@ const App: React.FC = () => {
             </div>
         ) : (
           <>
-            <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center" data-step="5" data-intro="This is the lineup grid. Active players are shown in their assigned positions.">
+            <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center" id="tour-step-5">
               {/* Forwards Headers */}
               <div />
               <h5 className="font-semibold text-center text-gray-300 text-sm">Left Wing</h5>

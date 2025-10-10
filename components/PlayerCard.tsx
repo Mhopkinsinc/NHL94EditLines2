@@ -179,11 +179,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
                             <div
                                 ref={menuRef}
                                 className="relative"
-                                {...(isTourStep && {
-                                    'data-step': '6',
-                                    'data-intro': "Click the menu on a player card to remove the player or view their attributes.",
-                                    'data-position': 'right',
-                                })}
+                                id={isTourStep ? 'tour-step-6' : undefined}
                             >
                                 <button
                                     onMouseDown={(e) => e.stopPropagation()} // Prevents drag from starting on menu click
