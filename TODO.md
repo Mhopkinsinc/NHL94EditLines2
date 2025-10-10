@@ -4,7 +4,6 @@ This file tracks upcoming tasks and feature requests for the application.
 
 ## Future Ideas
 - [ ] Add ability to edit player attributes directly from the attribute card modal.
-- [ ] Add a "Reset Team" button to revert changes for the currently selected team.
 
 ## Done
 - [x] Add History to show each change that was made to the lines in a seperate modal similar to the rominfoModal. Almost like an audit.
