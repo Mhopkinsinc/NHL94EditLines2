@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { INITIAL_LINEUP, NHL_TEAMS_1994 } from './constants';
 import type { Lineup, Player, PositionType, HistoryEntry } from './types';
@@ -7,7 +6,7 @@ import { Roster } from './components/Roster';
 import { PlayerSelectionModal } from './components/PlayerSelectionModal';
 import { TeamSelector } from './components/TeamSelector';
 import { AttributeCardModal } from './components/AttributeCardModal';
-import { parseRomData, RomData, parseAllTeams, TeamInfo } from './rom-parser';
+import { parseRomData, RomData, parseAllTeams, TeamInfo, updateRomChecksum } from './rom-parser';
 import { EASportsIcon, HistoryIcon, SaveIcon, UploadIcon, UploadRomIcon } from './components/icons';
 import { RomInfoModal } from './components/RomInfoModal';
 import { HistoryModal } from './components/HistoryModal';
@@ -329,7 +328,18 @@ const App: React.FC = () => {
             }
         }
     }
+    
+    // Apply the requested NOP patch at offset 0x300.
+    const patchOffset = 0x300;
+    const patchBytes = [0x4E, 0x71, 0x4E, 0x71, 0x4E, 0x71];
+    if (romView.byteLength >= patchOffset + patchBytes.length) {
+        patchBytes.forEach((byte, index) => {
+            romView.setUint8(patchOffset + index, byte);
+        });
+    }
 
+    // After all modifications, update the checksum before creating the blob.
+    updateRomChecksum(newRomBuffer);
 
     const blob = new Blob([newRomBuffer], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
@@ -828,7 +838,7 @@ const App: React.FC = () => {
               })}
             </div>
 
-            <div data-step="7" data-position="top" data-intro="This is the full roster. Drag a player from here and drop them into an empty slot on the lineup grid.">
+            <div>
                 <Roster 
                   players={lineup.roster}
                   onDragStart={(player, pIdx) => handleDragStart(player, { type: 'ROSTER', playerIndex: pIdx })}

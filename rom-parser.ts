@@ -368,3 +368,38 @@ export const parseRomData = (arrayBuffer: ArrayBuffer): RomData | null => {
     teamDataPointers: chunks,
   };
 };
+
+/**
+ * Calculates and updates the checksum for a Sega Genesis ROM.
+ * The checksum is a 16-bit sum of all 16-bit words from address 0x200 to the end of the ROM.
+ * The result is stored at address 0x18E.
+ * @param romBuffer The ArrayBuffer of the ROM file that will be modified.
+ * @returns The same ArrayBuffer that was passed in, but with the corrected checksum.
+ */
+export const updateRomChecksum = (romBuffer: ArrayBuffer): ArrayBuffer => {
+    // A ROM's checksum is stored at 0x18E (2 bytes, big-endian).
+    const checksumAddress = 0x18E;
+    // The checksum calculation begins at address 0x200.
+    const calculationStartAddress = 0x200;
+
+    // We modify the buffer in place.
+    const romView = new DataView(romBuffer);
+
+    let calculatedChecksum = 0;
+
+    // Sum all 16-bit words (big-endian) from 0x200 to the end of the ROM.
+    for (let i = calculationStartAddress; i < romView.byteLength; i += 2) {
+        // If there's an odd byte at the end, it's ignored.
+        if (i + 1 >= romView.byteLength) {
+            break;
+        }
+        // Read a 16-bit word in big-endian format.
+        const word = romView.getUint16(i, false);
+        calculatedChecksum = (calculatedChecksum + word) & 0xFFFF;
+    }
+
+    // Write the new 16-bit checksum back to the header at 0x18E in big-endian format.
+    romView.setUint16(checksumAddress, calculatedChecksum, false);
+
+    return romBuffer;
+};

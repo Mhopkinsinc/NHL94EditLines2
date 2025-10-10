@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import type { Player } from '../types';
 import { PlayerCard } from './PlayerCard';
@@ -85,7 +86,14 @@ export const Roster: React.FC<RosterProps> = ({ players, onDragStart, onDrop, on
       >
         {forwards.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-400 mb-2 px-1">Forwards</h3>
+            <h3 
+              className="text-lg font-semibold text-gray-400 mb-2 px-1"
+              data-step="7" 
+              data-position="bottom" 
+              data-intro="This is the full roster, organized by position. Drag a player from here and drop them into an empty slot on the lineup grid."
+            >
+              Forwards
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {renderPlayerList(forwards)}
             </div>

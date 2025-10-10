@@ -228,12 +228,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
           {isGoalie ? (
             <>
               <div className="text-center">
-                <span className="font-bold text-[10px] text-white uppercase tracking-wider">GLL/GLR</span>
-                <span className="block font-mono text-sm text-white leading-tight">{player.attributes.aggressiveness}/{player.attributes.passacc}</span>
-              </div>
-              <div className="text-center">
-                <span className="font-bold text-[10px] text-white uppercase tracking-wider">STL/STR</span>
-                <span className="block font-mono text-sm text-white leading-tight">{player.attributes.roughness}/{player.attributes.endurance}</span>
+                <span className="font-bold text-[10px] text-white uppercase tracking-wider">agl/spd</span>
+                <span className="block font-mono text-sm text-white leading-tight">{player.attributes.agility}/{player.attributes.speed}</span>
               </div>
               <div className="text-center">
                 <span className="font-bold text-[10px] text-white uppercase tracking-wider">DFA/PCK</span>
