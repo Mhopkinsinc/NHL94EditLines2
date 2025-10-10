@@ -350,7 +350,18 @@ const App: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
+    
+    // Update the app's state to use the newly saved ROM as the baseline
+    setRomBuffer(newRomBuffer);
+    const parsedData = parseRomData(newRomBuffer);
+    if (parsedData) {
+        const teams = parseAllTeams(parsedData, newRomBuffer);
+        setRomInfo({ data: parsedData, teams });
+    } else {
+        // This should not happen if the original ROM was valid
+        console.error("Failed to re-parse the saved ROM. State may be inconsistent.");
+    }
+    
     setModifiedLineups({});
     alert('ROM saved successfully with all team changes!');
 
