@@ -56,8 +56,8 @@ const App: React.FC = () => {
   const [isTourReady, setIsTourReady] = useState(false);
   const isDirty = Object.keys(modifiedLineups).length > 0;
 
-  const forwardLineLabels = ['Best', 'L1', 'L2', 'Chk', 'PP1', 'PP2', 'PK1', 'PK2'];
-  const defensePairingLabels = ['Best', 'L1', 'L2', 'Chk', 'PP1', 'PP2', 'PK1', 'PK2'];
+  const forwardLineLabels = ['NLC', 'L1', 'L2', 'Chk', 'PP1', 'PP2', 'PK1', 'PK2'];
+  const defensePairingLabels = ['NLC', 'L1', 'L2', 'Chk', 'PP1', 'PP2', 'PK1', 'PK2'];
 
 
   useEffect(() => {
@@ -763,7 +763,7 @@ const App: React.FC = () => {
 
               {/* Forward Lines */}
               {lineup.forwardLines.map((forwardLine, lineIndex) => {
-                if (!showAllLines && forwardLineLabels[lineIndex] !== 'Best') {
+                if (!showAllLines && forwardLineLabels[lineIndex] !== 'NLC') {
                     return null;
                 }
                 return (
@@ -812,7 +812,7 @@ const App: React.FC = () => {
 
               {/* Defense Pairings */}
               {lineup.defensePairings.map((defensePair, pairIndex) => {
-                 if (!showAllLines && defensePairingLabels[pairIndex] !== 'Best') {
+                 if (!showAllLines && defensePairingLabels[pairIndex] !== 'NLC') {
                     return null;
                 }
                 return (
