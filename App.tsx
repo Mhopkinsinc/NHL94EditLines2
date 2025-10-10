@@ -10,7 +10,7 @@ import { PlayerSelectionModal } from './components/PlayerSelectionModal';
 import { TeamSelector } from './components/TeamSelector';
 import { AttributeCardModal } from './components/AttributeCardModal';
 import { parseRomData, RomData, parseAllTeams, TeamInfo, updateRomChecksum } from './rom-parser';
-import { EASportsLogo, HistoryIcon, InfoIcon, SaveIcon, SegaGenesisLogo, UploadIcon, UploadRomIcon } from './components/icons';
+import { EASportsLogo, HistoryIcon, InfoIcon, ResetIcon, SaveIcon, SegaGenesisLogo, UploadIcon, UploadRomIcon } from './components/icons';
 import { RomInfoModal } from './components/RomInfoModal';
 import { HistoryModal } from './components/HistoryModal';
 import { AppInfoModal } from './components/AppInfoModal';
@@ -37,6 +37,93 @@ const isGoalie = (player: Player): boolean => {
   return player.role === 'Goalie';
 };
 
+interface ConfirmResetModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirmReset: () => void;
+  onSaveAndReset: () => void;
+}
+
+const ConfirmResetModal: React.FC<ConfirmResetModalProps> = ({ isOpen, onClose, onConfirmReset, onSaveAndReset }) => {
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, onClose]);
+
+    if (!isOpen) {
+        return null;
+    }
+
+    return (
+        <div 
+            className="fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-4 transition-opacity"
+            onClick={onClose}
+            aria-modal="true"
+            role="dialog"
+        >
+            <div 
+                className="bg-[#212934] border-2 border-sky-500/50 shadow-sky-500/20 shadow-2xl rounded-xl w-full max-w-md max-h-[90vh] flex flex-col relative overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="p-4 border-b-2 border-sky-500/30 flex justify-between items-center shrink-0 bg-black/20">
+                    <h2 
+                        className="text-xl font-black tracking-wide text-white"
+                        style={{ textShadow: '0 0 5px rgba(0,0,0,0.8)' }}
+                    >
+                        Unsaved Changes
+                    </h2>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 overflow-y-auto text-gray-300 space-y-4">
+                    <p>
+                        You have unsaved changes. Would you like to save them before resetting the application?
+                    </p>
+                </div>
+                
+                {/* Footer */}
+                <div className="p-3 mt-auto bg-black/20 border-t-2 border-sky-500/30 flex justify-end items-center gap-3">
+                    <button 
+                        onClick={onClose}
+                        className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold py-2 px-4 rounded-md transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        onClick={onConfirmReset}
+                        className="bg-red-900/80 hover:bg-red-800/80 text-red-200 hover:text-white font-semibold py-2 px-4 rounded-md transition-colors"
+                    >
+                        Reset Without Saving
+                    </button>
+                    <button 
+                        onClick={onSaveAndReset}
+                        className="bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+                    >
+                        Save & Reset
+                    </button>
+                </div>
+
+                 <button 
+                    onClick={onClose} 
+                    className="absolute top-2 right-2 text-gray-400 hover:text-white text-2xl font-bold bg-black/20 rounded-full w-7 h-7 flex items-center justify-center"
+                    aria-label="Close"
+                >
+                    &times;
+                </button>
+            </div>
+        </div>
+    );
+};
+
 
 const App: React.FC = () => {
   const [lineup, setLineup] = useState<Lineup>(INITIAL_LINEUP);
@@ -57,6 +144,7 @@ const App: React.FC = () => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isTourReady, setIsTourReady] = useState(false);
+  const [isConfirmResetModalOpen, setIsConfirmResetModalOpen] = useState(false);
   const isDirty = Object.keys(modifiedLineups).length > 0;
 
   const forwardLineLabels = ['NLC', 'L1', 'L2', 'Chk', 'PP1', 'PP2', 'PK1', 'PK2'];
@@ -234,7 +322,7 @@ const App: React.FC = () => {
 
 
   const handleToggleMenu = useCallback((menuId: string) => {
-    setOpenMenuId(prevId => (prevId === menuId ? null : menuId));
+    setOpenMenuId(prevId => (prevId === menuId ? null : prevId));
   }, []);
 
   const handleCloseMenus = useCallback(() => {
@@ -368,7 +456,7 @@ const App: React.FC = () => {
     setLineup(newLineup);
   };
 
-  const handleSaveChanges = useCallback(() => {
+  const handleSaveChanges = useCallback((options?: { silent?: boolean }) => {
     if (!romBuffer || !romInfo || !isDirty) return;
 
     const newRomBuffer = romBuffer.slice(0);
@@ -443,6 +531,13 @@ const App: React.FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
+    if (options?.silent) {
+        // Just clear the dirty state without alerts or re-parsing.
+        // Used when saving and then immediately resetting the app.
+        setModifiedLineups({});
+        return;
+    }
+
     // Update the app's state to use the newly saved ROM as the baseline
     setRomBuffer(newRomBuffer);
     const parsedData = parseRomData(newRomBuffer);
@@ -667,6 +762,40 @@ const App: React.FC = () => {
     setHistoryLog(newHistory);
   }, [historyLog, selectedTeamName]);
 
+  const performReset = useCallback(() => {
+    setRomInfo(null);
+    setRomBuffer(null);
+    setAvailableTeams([]);
+    setSelectedTeamName('');
+    setLineup(INITIAL_LINEUP);
+    setModifiedLineups({});
+    setHistoryLog([]);
+    setShowAllLines(false);
+    setOpenMenuId(null);
+    
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  }, []);
+
+  const handleResetApp = useCallback(() => {
+    if (isDirty) {
+        setIsConfirmResetModalOpen(true);
+    } else {
+        performReset();
+    }
+  }, [isDirty, performReset]);
+
+  const handleConfirmSaveAndReset = useCallback(() => {
+    handleSaveChanges({ silent: true });
+    performReset();
+    setIsConfirmResetModalOpen(false);
+  }, [handleSaveChanges, performReset]);
+
+  const handleConfirmResetWithoutSaving = useCallback(() => {
+    performReset();
+    setIsConfirmResetModalOpen(false);
+  }, [performReset]);
 
   const getIsDragSource = (type: 'FORWARD_LINE' | 'DEFENSE_PAIRING' | 'ROSTER', index?: number, position?: PositionType): boolean => {
     if (!draggedItem) return false;
@@ -733,10 +862,7 @@ const App: React.FC = () => {
                 94' Team Line Editor & Player Viewer
             </div>
             <div className="flex items-center gap-4">
-                <SegaGenesisLogo aria-label="Sega Genesis Logo" className="h-6 text-white" />
-                <div className="text-white font-semibold text-sm">
-                    SEGA | v.2025.10.10
-                </div>
+                <SegaGenesisLogo aria-label="Sega Genesis Logo" className="h-6 text-white" />                
                 <button 
                     onClick={handleOpenAppInfoModal}
                     className="bg-gray-700/50 hover:bg-gray-600/50 p-1.5 rounded-full transition-colors"
@@ -789,7 +915,7 @@ const App: React.FC = () => {
                 />
                 <button
                     id="tour-step-2"
-                    onClick={handleSaveChanges}
+                    onClick={() => handleSaveChanges()}
                     className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5"
                     disabled={!isDirty}
                     title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
@@ -817,6 +943,14 @@ const App: React.FC = () => {
                             title="Click this icon to view detailed information about the loaded ROM"
                         >
                             <EASportsLogo className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={handleResetApp}
+                            className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
+                            aria-label="Unload ROM and start over"
+                            title="Unload ROM and start over"
+                        >
+                            <ResetIcon className="w-5 h-5 text-red-500" />
                         </button>
                     </div>
                 )}
@@ -941,7 +1075,7 @@ const App: React.FC = () => {
                                   player={defensePair[position]}
                                   onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
                                   onDrop={(idx, pos) => handleDrop({ type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
-                                  onRemove={(idx, pos) => handleRemovePlayer('defense', idx, pos)}
+                                  onRemove={(idx, pos) => handleRemovePlayer('defense', pairIndex, pos)}
                                   onEmptyClick={() => handleOpenPlayerSelection('defense', pairIndex, position)}
                                   onViewAttributes={handleOpenAttributeModal}
                                   isDragSource={getIsDragSource('DEFENSE_PAIRING', pairIndex, position)}
@@ -1011,6 +1145,12 @@ const App: React.FC = () => {
       {isAppInfoModalOpen && (
         <AppInfoModal onClose={handleCloseAppInfoModal} />
       )}
+      <ConfirmResetModal 
+        isOpen={isConfirmResetModalOpen}
+        onClose={() => setIsConfirmResetModalOpen(false)}
+        onConfirmReset={handleConfirmResetWithoutSaving}
+        onSaveAndReset={handleConfirmSaveAndReset}
+      />
     </div>
   );
 };

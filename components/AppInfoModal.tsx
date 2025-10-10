@@ -50,7 +50,10 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({ onClose }) => {
                         Drag and drop players between the lineup and the roster, view player attributes, and save your changes back to a new ROM file.
                     </p>
                     <p>
-                        All changes are tracked, and you can undo them via the history panel. Enjoy, any feedback is welcome.
+                        All changes are tracked, and you can undo them via the history panel. You can also export changes to Excel.
+                    </p>
+                    <p>
+                        Enjoy, any feedback is welcome.
                     </p>
                      <p>
                         v 2025.10.10

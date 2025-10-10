@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { HistoryEntry } from '../types';
+import { SaveIcon } from './icons';
 
 interface HistoryModalProps {
   history: HistoryEntry[];
@@ -65,6 +66,45 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose, on
         };
     }, [onClose]);
 
+    const handleExportCSV = () => {
+        if (history.length === 0) return;
+
+        const escapeCSV = (field: string | Date): string => {
+            const strField = typeof field === 'string' ? field : field.toLocaleString();
+            let escaped = strField.replace(/"/g, '""'); // Escape double quotes
+            // Wrap in double quotes if it contains comma, newline, or the original had a quote
+            if (strField.includes(',') || strField.includes('"') || strField.includes('\n') || strField.includes('\r')) {
+                escaped = `"${escaped}"`;
+            }
+            return escaped;
+        };
+
+        const headers = ['Timestamp', 'Team', 'Description'];
+        // The history log is newest-first, so reverse it for a chronological CSV export.
+        const sortedHistory = [...history].reverse();
+
+        const rows = sortedHistory.map(entry =>
+            [
+                escapeCSV(entry.timestamp),
+                escapeCSV(entry.teamName),
+                escapeCSV(entry.description)
+            ].join(',')
+        );
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "nhl94-changes-history.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const cascadingEntriesInfo = useMemo(() => {
         const hoveredEntry = hoveredUndoId ? history.find(entry => entry.id === hoveredUndoId) : null;
         if (!hoveredEntry) {
@@ -111,7 +151,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose, on
 
                 {/* Body */}
                 <div className="p-4 overflow-y-auto">
-                   <div className="bg-black/20 p-2 rounded-md space-y-1 text-sm max-h-[70vh] overflow-y-auto">
+                   <div className="bg-black/20 p-2 rounded-md space-y-1 text-sm max-h-[65vh] overflow-y-auto">
                         {history.length > 0 ? (
                             <ul className="flex flex-col">
                                 {history.map((entry) => {
@@ -165,6 +205,20 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose, on
                             <p className="text-gray-500 text-center p-8">No changes have been made yet.</p>
                         )}
                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-3 mt-auto bg-black/20 border-t-2 border-sky-500/30 flex justify-end items-center gap-3">
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={history.length === 0}
+                        className="bg-sky-600 hover:bg-sky-500 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-md transition-colors flex items-center gap-2"
+                        aria-label="Export history to CSV"
+                        title={history.length > 0 ? "Export history to CSV" : "No history to export"}
+                    >
+                        <SaveIcon className="w-5 h-5" />
+                        Export to CSV
+                    </button>
                 </div>
 
                  <button 

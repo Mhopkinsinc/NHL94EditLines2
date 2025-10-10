@@ -160,3 +160,9 @@ export const EASportsLogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
         <path fillRule="evenodd" clipRule="evenodd" fill="#295ba7" d="M180.85 126.965h-1.313v-4.926h-1.31v-1.314h3.933v1.314h-1.31v4.926zM187.402 123.354l-1.31 3.939h-.654l-1.311-3.939-.656 3.611h-1.311l.983-6.24h.984l1.637 3.941 1.638-3.941h.985l.982 6.24h-1.31l-.657-3.611z" />
     </svg>
 );
+
+export const ResetIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" />
+    </svg>
+);
