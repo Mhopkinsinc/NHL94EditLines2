@@ -201,13 +201,13 @@ const App: React.FC = () => {
                  const driverObj = driver({
                     showProgress: true,
                     onDestroyed: () => {
-                        sessionStorage.setItem('nhl94-tour-shown', 'true');
+                        localStorage.setItem('nhl94-tour-shown', 'true');
                     },
                     steps: availableSteps,
                 });
                 driverObj.drive();
             } else {
-                sessionStorage.setItem('nhl94-tour-shown', 'true');
+                localStorage.setItem('nhl94-tour-shown', 'true');
             }
         }, 500);
         setIsTourReady(false); // Reset the trigger
@@ -278,7 +278,7 @@ const App: React.FC = () => {
             setRomInfo({ data: parsedData, teams });
             console.log('Parsed Team Data:', teams);
 
-            const tourShown = sessionStorage.getItem('nhl94-tour-shown');
+            const tourShown = localStorage.getItem('nhl94-tour-shown');
             if (!tourShown) {
                 setIsTourReady(true);
             }
