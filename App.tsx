@@ -322,7 +322,7 @@ const App: React.FC = () => {
 
 
   const handleToggleMenu = useCallback((menuId: string) => {
-    setOpenMenuId(prevId => (prevId === menuId ? null : prevId));
+    setOpenMenuId(prevId => (prevId === menuId ? null : menuId));
   }, []);
 
   const handleCloseMenus = useCallback(() => {
