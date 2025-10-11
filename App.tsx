@@ -609,6 +609,12 @@ const App: React.FC = () => {
         return;
     }
 
+    // If dragging from roster to roster, it's a no-op and should not be recorded.
+    if (source.type === 'ROSTER' && target.type === 'ROSTER') {
+      setDraggedItem(null);
+      return;
+    }
+
     // Rule validation
     if (target.type === 'FORWARD_LINE' && !isForward(player)) {
         setDraggedItem(null);
