@@ -10,6 +10,7 @@ interface PlayerCardProps {
   onDragStart?: (player: Player) => void;
   onRemove?: () => void;
   onViewAttributes?: (player: Player) => void;
+  onCompare: (player: Player) => void;
   isDragging?: boolean;
   isGhost?: boolean;
   menuOpen?: boolean;
@@ -17,6 +18,8 @@ interface PlayerCardProps {
   onCloseMenu?: () => void;
   selectedTeamName?: string;
   isTourStep?: boolean;
+  isComparisonMode: boolean;
+  firstComparisonPlayer: Player | null;
 }
 
 const getLastName = (name: string): string => {
@@ -39,9 +42,22 @@ const PlayerStatusIcon: React.FC<{ status?: string }> = ({ status }) => {
 };
 
 
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onRemove, onViewAttributes, isDragging, isGhost, menuOpen, onToggleMenu, onCloseMenu, selectedTeamName, isTourStep }) => {
+export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onRemove, onViewAttributes, onCompare, isDragging, isGhost, menuOpen, onToggleMenu, onCloseMenu, selectedTeamName, isTourStep, isComparisonMode, firstComparisonPlayer }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const isGoalie = player.role === 'Goalie';
+  // FIX: Define isHeavyweight and isLightweight based on player attributes to resolve undefined variable errors.
+  const isHeavyweight = player.attributes.weight >= 10;
+  const isLightweight = player.attributes.weight <= 5;
+
+  const isCompatibleForComparison = useMemo(() => {
+    if (!isComparisonMode || !firstComparisonPlayer || firstComparisonPlayer.id === player.id) {
+        return true; // Not in selection mode, or it's the selected player, so it's not "incompatible"
+    }
+    const firstIsGoalie = firstComparisonPlayer.role === 'Goalie';
+    const currentIsGoalie = player.role === 'Goalie';
+    // Comparison is compatible if both are goalies or both are skaters.
+    return firstIsGoalie === currentIsGoalie;
+  }, [isComparisonMode, firstComparisonPlayer, player.id, player.role]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     if (onDragStart) {
@@ -75,6 +91,22 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
     }
     if (onCloseMenu) {
         onCloseMenu();
+    }
+  }
+
+  const handleCompare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCompare(player);
+    if (onCloseMenu) {
+        onCloseMenu();
+    }
+  }
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isComparisonMode && firstComparisonPlayer?.id !== player.id) {
+        if (!isCompatibleForComparison) return; // Prevent selection of incompatible player
+        e.preventDefault();
+        onCompare(player);
     }
   }
 
@@ -123,22 +155,29 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
     };
   }, [selectedTeamName]);
   
-  const baseClasses = "rounded-lg pt-1 pb-2 px-2 text-white shadow-lg relative h-[4.5rem] flex w-full transition-all duration-200 ring-1 ring-sky-400/50";
+  const isSelectedForComparison = firstComparisonPlayer?.id === player.id;
+  const isClickableForComparison = isComparisonMode && !isSelectedForComparison;
+
+  const baseClasses = "rounded-lg pt-1 pb-2 px-2 text-white shadow-lg relative h-[4.5rem] flex w-full transition-all duration-200";
   const draggingClasses = "opacity-80 scale-105 -rotate-2 shadow-2xl z-20 ring-2 ring-sky-400 ring-offset-4 ring-offset-[#212934]";
   const ghostClasses = "opacity-40 border-2 border-dashed border-gray-500 bg-transparent";
   const menuOpenClasses = "z-30";
+  const comparisonSelectableClasses = 'cursor-pointer hover:ring-2 hover:ring-green-400';
+  const comparisonSelectedClasses = 'ring-2 ring-blue-500 scale-105 shadow-xl';
+  const comparisonDisabledClasses = 'opacity-50 cursor-not-allowed';
 
-  const isLightweight = player.attributes.weight <= 5;
-  const isHeavyweight = player.attributes.weight >= 10;
 
   return (
     <div
-      draggable={!isGhost && !!onDragStart}
-      onDragStart={!isGhost ? handleDragStart : undefined}
+      draggable={!isGhost && !!onDragStart && !isComparisonMode}
+      onDragStart={!isGhost && !isComparisonMode ? handleDragStart : undefined}
+      onClick={handleCardClick}
       className={`${baseClasses} 
-        ${isGhost ? ghostClasses : 'cursor-grab active:cursor-grabbing hover:scale-[1.03] hover:shadow-xl'}
+        ${isGhost ? ghostClasses : isComparisonMode ? '' : 'cursor-grab active:cursor-grabbing hover:scale-[1.03] hover:shadow-xl'}
         ${isDragging ? draggingClasses : ''}
         ${menuOpen ? menuOpenClasses : ''}
+        ${isClickableForComparison ? (isCompatibleForComparison ? comparisonSelectableClasses : comparisonDisabledClasses) : ''}
+        ${isSelectedForComparison ? comparisonSelectedClasses : 'ring-1 ring-sky-400/50'}
       `}
     >
       {!isGhost && (
@@ -202,13 +241,16 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
                                         aria-labelledby="options-menu"
                                     >
                                         <div className="py-2" role="none">
+                                            {onViewAttributes && (
+                                                <button onClick={handleViewAttributes} className="block w-full text-left px-3 py-1 text-xs text-gray-200 hover:bg-[#394559]" role="menuitem">View Attributes</button>
+                                            )}
+                                            <button onClick={handleCompare} className="block w-full text-left px-3 py-1 text-xs text-gray-200 hover:bg-[#394559]" role="menuitem">
+                                                Compare Player
+                                            </button>
                                             {onRemove && (
                                                 <button onClick={handleRemove} className="block w-full text-left px-3 py-1 text-xs text-gray-200 hover:bg-[#394559]" role="menuitem">
                                                     Remove Player
                                                 </button>
-                                            )}
-                                            {onViewAttributes && (
-                                                <a href="#" onClick={handleViewAttributes} className="block px-3 py-1 text-xs text-left text-gray-200 hover:bg-[#394559]" role="menuitem">View Attributes</a>
                                             )}
                                         </div>
                                     </div>

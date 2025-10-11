@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 // FIX: Import `DriveStep` to correctly type the tour steps array, resolving a type incompatibility.
 import { driver, type DriveStep } from 'driver.js';
@@ -14,6 +13,7 @@ import { EASportsLogo, HistoryIcon, InfoIcon, ResetIcon, SaveIcon, SegaGenesisLo
 import { RomInfoModal } from './components/RomInfoModal';
 import { HistoryModal } from './components/HistoryModal';
 import { AppInfoModal } from './components/AppInfoModal';
+import { PlayerComparisonModal } from './components/PlayerComparisonModal';
 
 type DragSource =
   | { type: 'FORWARD_LINE'; lineIndex: number; position: 'LW' | 'C' | 'RW' | 'EX' }
@@ -145,6 +145,9 @@ const App: React.FC = () => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isTourReady, setIsTourReady] = useState(false);
   const [isConfirmResetModalOpen, setIsConfirmResetModalOpen] = useState(false);
+  const [firstPlayerForComparison, setFirstPlayerForComparison] = useState<Player | null>(null);
+  const [playersInComparison, setPlayersInComparison] = useState<{ p1: Player; p2: Player } | null>(null);
+  const [comparisonError, setComparisonError] = useState<string | null>(null);
   const isDirty = Object.keys(modifiedLineups).length > 0;
 
   const forwardLineLabels = ['NLC', 'L1', 'L2', 'Chk', 'PP1', 'PP2', 'PK1', 'PK2'];
@@ -577,9 +580,10 @@ const App: React.FC = () => {
   }, [selectingForSlot, handleClosePlayerSelection, selectedTeamName, lineup]);
 
   const handleDragStart = useCallback((player: Player, source: DragSource) => {
+    if (firstPlayerForComparison) return; // Prevent dragging in comparison mode.
     setDraggedItem({ player, source });
     handleCloseMenus();
-  }, [handleCloseMenus]);
+  }, [handleCloseMenus, firstPlayerForComparison]);
   
   const handleDragEnd = useCallback(() => {
     setDraggedItem(null);
@@ -772,6 +776,9 @@ const App: React.FC = () => {
     setHistoryLog([]);
     setShowAllLines(false);
     setOpenMenuId(null);
+    setFirstPlayerForComparison(null);
+    setPlayersInComparison(null);
+    setComparisonError(null);
     
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -796,6 +803,45 @@ const App: React.FC = () => {
     performReset();
     setIsConfirmResetModalOpen(false);
   }, [performReset]);
+
+  const handleComparisonSelect = useCallback((player: Player) => {
+    if (comparisonError) setComparisonError(null); // Clear previous error on any new attempt
+
+    if (firstPlayerForComparison) {
+        // This is the second player.
+        // Don't compare a player with themselves.
+        if (firstPlayerForComparison.id === player.id) {
+            return;
+        }
+
+        const firstIsGoalie = firstPlayerForComparison.role === 'Goalie';
+        const secondIsGoalie = player.role === 'Goalie';
+
+        // Prevent comparison between a skater and a goalie.
+        if (firstIsGoalie !== secondIsGoalie) {
+            setComparisonError('Cannot compare a skater with a goalie.');
+            setTimeout(() => setComparisonError(null), 3000); // Auto-clear after 3s
+            return;
+        }
+        
+        setPlayersInComparison({ p1: firstPlayerForComparison, p2: player });
+        setFirstPlayerForComparison(null); // Exit comparison mode
+        setComparisonError(null);
+    } else {
+        // This is the first player.
+        setFirstPlayerForComparison(player);
+        setComparisonError(null); // Clear any lingering error
+    }
+  }, [firstPlayerForComparison, comparisonError]);
+
+  const handleCancelComparison = useCallback(() => {
+      setFirstPlayerForComparison(null);
+      setComparisonError(null);
+  }, []);
+
+  const handleCloseComparisonModal = useCallback(() => {
+      setPlayersInComparison(null);
+  }, []);
 
   const getIsDragSource = (type: 'FORWARD_LINE' | 'DEFENSE_PAIRING' | 'ROSTER', index?: number, position?: PositionType): boolean => {
     if (!draggedItem) return false;
@@ -854,6 +900,7 @@ const App: React.FC = () => {
 
   const forwardPositions: ('LW' | 'C' | 'RW' | 'EX')[] = ['LW', 'C', 'RW', 'EX'];
   const defensePositions: ('LD' | 'RD' | 'G')[] = ['LD', 'RD', 'G'];
+  const isComparisonMode = !!firstPlayerForComparison;
 
   return (
     <div className="min-h-screen text-white font-sans" onDragEnd={handleDragEnd}>
@@ -1030,6 +1077,7 @@ const App: React.FC = () => {
                               onRemove={(idx, pos) => handleRemovePlayer('forward', idx, pos)}
                               onEmptyClick={() => handleOpenPlayerSelection('forward', lineIndex, position)}
                               onViewAttributes={handleOpenAttributeModal}
+                              onCompare={handleComparisonSelect}
                               isDragSource={getIsDragSource('FORWARD_LINE', lineIndex, position)}
                               draggedPlayer={draggedItem?.player}
                               menuId={menuId}
@@ -1038,6 +1086,8 @@ const App: React.FC = () => {
                               onCloseMenu={handleCloseMenus}
                               selectedTeamName={selectedTeamName}
                               isTourStep={isTourStepTarget && !!forwardLine[position]}
+                              isComparisonMode={isComparisonMode}
+                              firstComparisonPlayer={firstPlayerForComparison}
                             />
                           );
                         })}
@@ -1078,6 +1128,7 @@ const App: React.FC = () => {
                                   onRemove={(idx, pos) => handleRemovePlayer('defense', pairIndex, pos)}
                                   onEmptyClick={() => handleOpenPlayerSelection('defense', pairIndex, position)}
                                   onViewAttributes={handleOpenAttributeModal}
+                                  onCompare={handleComparisonSelect}
                                   isDragSource={getIsDragSource('DEFENSE_PAIRING', pairIndex, position)}
                                   draggedPlayer={draggedItem?.player}
                                   menuId={menuId}
@@ -1085,6 +1136,8 @@ const App: React.FC = () => {
                                   onToggleMenu={handleToggleMenu}
                                   onCloseMenu={handleCloseMenus}
                                   selectedTeamName={selectedTeamName}
+                                  isComparisonMode={isComparisonMode}
+                                  firstComparisonPlayer={firstPlayerForComparison}
                               />
                             );
                           })}
@@ -1097,21 +1150,41 @@ const App: React.FC = () => {
               <div>
                   <Roster 
                     players={lineup.roster}
-                    onDragStart={(player, pIdx) => handleDragStart(player, { type: 'ROSTER', playerIndex: pIdx })}
+                    onDragStart={(p, pIdx) => handleDragStart(p, { type: 'ROSTER', playerIndex: pIdx })}
                     onDrop={() => handleDrop({ type: 'ROSTER' })}
                     onViewAttributes={handleOpenAttributeModal}
+                    onCompare={handleComparisonSelect}
                     isDragSource={getIsDragSource('ROSTER')}
                     draggedPlayer={draggedItem?.player}
                     openMenuId={openMenuId}
                     onToggleMenu={handleToggleMenu}
                     onCloseMenu={handleCloseMenus}
                     selectedTeamName={selectedTeamName}
+                    isComparisonMode={isComparisonMode}
+                    firstComparisonPlayer={firstPlayerForComparison}
                   />
               </div>
             </>
           )}
         </main>
       </div>
+      {firstPlayerForComparison && (
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 ${comparisonError ? 'bg-red-600' : 'bg-sky-600'} text-white py-2 px-6 rounded-lg shadow-2xl z-50 flex items-center gap-4 transition-all`}>
+            <p>
+                {comparisonError 
+                    ? <strong>{comparisonError}</strong>
+                    : <>Select another player to compare with <strong>{firstPlayerForComparison.name}</strong></>
+                }
+            </p>
+            <button 
+                onClick={handleCancelComparison} 
+                className={`${comparisonError ? 'bg-red-800 hover:bg-red-700' : 'bg-sky-800 hover:bg-sky-700'} text-sm font-semibold py-1 px-3 rounded-md transition-colors`}
+                aria-label="Cancel comparison"
+            >
+                Cancel
+            </button>
+        </div>
+      )}
       {selectingForSlot && (
         <PlayerSelectionModal
             roster={lineup.roster}
@@ -1126,6 +1199,12 @@ const App: React.FC = () => {
           player={viewingAttributesFor}
           onClose={handleCloseAttributeModal}
           selectedTeamName={selectedTeamName}
+        />
+      )}
+      {playersInComparison && (
+        <PlayerComparisonModal 
+            players={playersInComparison}
+            onClose={handleCloseComparisonModal}
         />
       )}
       {isRomInfoModalOpen && romInfo && (

@@ -16,9 +16,13 @@ interface PositionColumnProps {
   onDragStart: (player: Player, sourceColumnId: string) => void;
   onDrop: (destinationColumnId:string) => void;
   isDropTarget: boolean;
+  // FIX: Add missing properties to support player comparison feature.
+  onCompare: (player: Player) => void;
+  isComparisonMode: boolean;
+  firstComparisonPlayer: Player | null;
 }
 
-export const PositionColumn: React.FC<PositionColumnProps> = ({ position, onDragStart, onDrop, isDropTarget }) => {
+export const PositionColumn: React.FC<PositionColumnProps> = ({ position, onDragStart, onDrop, isDropTarget, onCompare, isComparisonMode, firstComparisonPlayer }) => {
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -45,6 +49,10 @@ export const PositionColumn: React.FC<PositionColumnProps> = ({ position, onDrag
             key={player.id} 
             player={player} 
             onDragStart={(p) => onDragStart(p, position.id)}
+            // FIX: Pass down properties required by PlayerCard for comparison feature.
+            onCompare={onCompare}
+            isComparisonMode={isComparisonMode}
+            firstComparisonPlayer={firstComparisonPlayer}
           />
         ))}
       </div>

@@ -14,21 +14,24 @@ interface PositionSlotProps {
   onRemove?: (index: number, position: PositionType) => void;
   onEmptyClick?: () => void;
   onViewAttributes: (player: Player) => void;
+  onCompare: (player: Player) => void;
   isDragSource: boolean;
-  draggedPlayer?: Player;
+  draggedPlayer?: Player | null;
   menuId: string;
   isMenuOpen: boolean;
   onToggleMenu: (menuId: string) => void;
   onCloseMenu: () => void;
   selectedTeamName: string;
   isTourStep?: boolean;
+  isComparisonMode: boolean;
+  firstComparisonPlayer: Player | null;
 }
 
-export const PositionSlot: React.FC<PositionSlotProps> = ({ index, positionType, player, onDragStart, onDrop, onRemove, onEmptyClick, onViewAttributes, isDragSource, draggedPlayer, menuId, isMenuOpen, onToggleMenu, onCloseMenu, selectedTeamName, isTourStep }) => {
+export const PositionSlot: React.FC<PositionSlotProps> = ({ index, positionType, player, onDragStart, onDrop, onRemove, onEmptyClick, onViewAttributes, onCompare, isDragSource, draggedPlayer, menuId, isMenuOpen, onToggleMenu, onCloseMenu, selectedTeamName, isTourStep, isComparisonMode, firstComparisonPlayer }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const canDrop = useMemo(() => {
-    if (!draggedPlayer) return false;
+    if (isComparisonMode || !draggedPlayer) return false;
 
     const forwardPositions: ReadonlyArray<PositionType> = ['LW', 'C', 'RW', 'EX'];
     const defensePositions: ReadonlyArray<PositionType> = ['LD', 'RD'];
@@ -47,7 +50,7 @@ export const PositionSlot: React.FC<PositionSlotProps> = ({ index, positionType,
     if (playerIsGoalie && slotIsGoalie) return true;
     
     return false;
-  }, [draggedPlayer, positionType]);
+  }, [draggedPlayer, positionType, isComparisonMode]);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     if (canDrop) {
@@ -125,22 +128,25 @@ export const PositionSlot: React.FC<PositionSlotProps> = ({ index, positionType,
           onDragStart={(p) => onDragStart(p, index, positionType)}
           onRemove={onRemove ? () => onRemove(index, positionType) : undefined}
           onViewAttributes={onViewAttributes}
+          onCompare={onCompare}
           isDragging={draggedPlayer?.id === player.id}
           menuOpen={isMenuOpen}
           onToggleMenu={() => onToggleMenu(menuId)}
           onCloseMenu={onCloseMenu}
           selectedTeamName={selectedTeamName}
           isTourStep={isTourStep}
+          isComparisonMode={isComparisonMode}
+          firstComparisonPlayer={firstComparisonPlayer}
         />
       ) : showGhost && draggedPlayer ? (
-        <PlayerCard player={draggedPlayer} isGhost selectedTeamName={selectedTeamName} />
+        <PlayerCard player={draggedPlayer} isGhost selectedTeamName={selectedTeamName} onCompare={onCompare} isComparisonMode={isComparisonMode} firstComparisonPlayer={firstComparisonPlayer} />
       ) : (
         <div 
-            className="w-full h-[4.5rem] bg-[#2B3544] rounded-lg flex justify-center items-center hover:bg-[#394559] transition-colors cursor-pointer relative overflow-hidden"
-            onClick={onEmptyClick}
+            className={`w-full h-[4.5rem] bg-[#2B3544] rounded-lg flex justify-center items-center transition-colors relative overflow-hidden ${isComparisonMode ? 'cursor-not-allowed opacity-50' : 'hover:bg-[#394559] cursor-pointer'}`}
+            onClick={isComparisonMode ? undefined : onEmptyClick}
             role="button"
-            tabIndex={onEmptyClick ? 0 : -1}
-            onKeyPress={(e) => { if (e.key === 'Enter' && onEmptyClick) onEmptyClick() }}
+            tabIndex={onEmptyClick && !isComparisonMode ? 0 : -1}
+            onKeyPress={(e) => { if (e.key === 'Enter' && onEmptyClick && !isComparisonMode) onEmptyClick() }}
             aria-label={`Add player to ${positionType}`}
         >
             <div className="absolute inset-0 z-0">

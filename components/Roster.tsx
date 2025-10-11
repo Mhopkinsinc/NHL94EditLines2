@@ -7,15 +7,18 @@ interface RosterProps {
   onDragStart: (player: Player, playerIndex: number) => void;
   onDrop: () => void;
   onViewAttributes: (player: Player) => void;
+  onCompare: (player: Player) => void;
   isDragSource: boolean;
-  draggedPlayer?: Player;
+  draggedPlayer?: Player | null;
   openMenuId: string | null;
   onToggleMenu: (menuId: string) => void;
   onCloseMenu: () => void;
   selectedTeamName: string;
+  isComparisonMode: boolean;
+  firstComparisonPlayer: Player | null;
 }
 
-export const Roster: React.FC<RosterProps> = ({ players, onDragStart, onDrop, onViewAttributes, isDragSource, draggedPlayer, openMenuId, onToggleMenu, onCloseMenu, selectedTeamName }) => {
+export const Roster: React.FC<RosterProps> = ({ players, onDragStart, onDrop, onViewAttributes, onCompare, isDragSource, draggedPlayer, openMenuId, onToggleMenu, onCloseMenu, selectedTeamName, isComparisonMode, firstComparisonPlayer }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -62,11 +65,14 @@ export const Roster: React.FC<RosterProps> = ({ players, onDragStart, onDrop, on
           player={player} 
           onDragStart={(p) => onDragStart(p, originalIndex)}
           onViewAttributes={onViewAttributes}
+          onCompare={onCompare}
           isDragging={draggedPlayer?.id === player.id}
           menuOpen={openMenuId === menuId}
           onToggleMenu={() => onToggleMenu(menuId)}
           onCloseMenu={onCloseMenu}
           selectedTeamName={selectedTeamName}
+          isComparisonMode={isComparisonMode}
+          firstComparisonPlayer={firstComparisonPlayer}
         />
       );
     });
@@ -121,7 +127,7 @@ export const Roster: React.FC<RosterProps> = ({ players, onDragStart, onDrop, on
       
       {showHighlight && draggedPlayer && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              <PlayerCard player={draggedPlayer} isGhost selectedTeamName={selectedTeamName} />
+              <PlayerCard player={draggedPlayer} isGhost selectedTeamName={selectedTeamName} onCompare={onCompare} isComparisonMode={isComparisonMode} firstComparisonPlayer={firstComparisonPlayer} />
           </div>
       )}
       {!hasPlayers && !showHighlight && (

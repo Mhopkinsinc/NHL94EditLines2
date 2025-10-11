@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo } from 'react';
 import type { Player, PositionType } from '../types';
 import { PlayerCard } from './PlayerCard';
@@ -87,7 +86,13 @@ export const PlayerSelectionModal: React.FC<PlayerSelectionModalProps> = ({ rost
                                 onKeyPress={(e) => { if (e.key === 'Enter') onSelectPlayer(player); }}
                                 aria-label={`Select ${player.name}`}
                             >
-                                <PlayerCard player={player} selectedTeamName={selectedTeamName} />
+                                <PlayerCard
+                                  player={player}
+                                  selectedTeamName={selectedTeamName}
+                                  onCompare={() => {}}
+                                  isComparisonMode={false}
+                                  firstComparisonPlayer={null}
+                                />
                             </div>
                         ))
                     ) : (
