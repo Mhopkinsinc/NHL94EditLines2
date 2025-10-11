@@ -246,7 +246,7 @@ const App: React.FC = () => {
                     element: '#tour-step-2', 
                     popover: { 
                         title: 'Save Your Work', 
-                        description: "When you're finished, click 'Save ROM' to download a new file with all your changes." 
+                        description: "When you're finished, click 'Save ROM' to download a new rom with all your changes." 
                     } 
                 },
                 { 
@@ -267,14 +267,14 @@ const App: React.FC = () => {
                     element: '#tour-step-5', 
                     popover: { 
                         title: 'The Lineup Grid', 
-                        description: 'This is the lineup grid. Active players are shown in their assigned positions.' 
+                        description: 'This is the lineup grid. Edit your Lines here.' 
                     } 
                 },
                 { 
                     element: '#tour-step-6', 
                     popover: { 
-                        title: 'Player Options', 
-                        description: "Click the menu on a player card to remove the player or view their attributes.",
+                        title: 'Player Options Menu', 
+                        description: "Click the menu on a player card to remove the player, view their attributes, or compare players.",
                         side: "right",
                         align: 'start'
                     },
