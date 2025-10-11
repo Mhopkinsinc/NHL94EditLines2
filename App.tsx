@@ -130,7 +130,7 @@ const App: React.FC = () => {
   const [draggedItem, setDraggedItem] = useState<{ player: Player; source: DragSource } | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectingForSlot, setSelectingForSlot] = useState<{ lineType: 'forward' | 'defense'; index: number; position: PositionType } | null>(null);
-  const [showAllLines, setShowAllLines] = useState(false);
+  const [selectedLine, setSelectedLine] = useState<string>('NLC');
   const [viewingAttributesFor, setViewingAttributesFor] = useState<Player | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [romInfo, setRomInfo] = useState<{ data: RomData; teams: TeamInfo[] } | null>(null);
@@ -780,7 +780,7 @@ const App: React.FC = () => {
     setLineup(INITIAL_LINEUP);
     setModifiedLineups({});
     setHistoryLog([]);
-    setShowAllLines(false);
+    setSelectedLine('NLC');
     setOpenMenuId(null);
     setFirstPlayerForComparison(null);
     setPlayersInComparison(null);
@@ -946,15 +946,19 @@ const App: React.FC = () => {
 
             <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end gap-6">
               <div className="flex items-center">
-                  <label htmlFor="all-lines-toggle" className="mr-3 text-sm font-medium text-gray-300 select-none">Show 'All' Lines</label>
-                  <input
-                      id="all-lines-toggle"
-                      type="checkbox"
-                      checked={showAllLines}
-                      onChange={() => setShowAllLines(!showAllLines)}
-                      className="w-4 h-4 text-sky-500 bg-gray-700 border-gray-600 rounded focus:ring-sky-600 ring-offset-gray-800 focus:ring-2 cursor-pointer disabled:opacity-50"
+                  <label htmlFor="line-selector" className="mr-3 text-sm font-medium text-gray-300 select-none">View Line</label>
+                  <select
+                      id="line-selector"
+                      value={selectedLine}
+                      onChange={(e) => setSelectedLine(e.target.value)}
+                      className="bg-[#2B3544] border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-32 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={!romInfo}
-                  />
+                  >
+                      <option value="All">All Lines</option>
+                      {forwardLineLabels.map(label => (
+                          <option key={label} value={label}>{label}</option>
+                      ))}
+                  </select>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1063,13 +1067,14 @@ const App: React.FC = () => {
 
                 {/* Forward Lines */}
                 {lineup.forwardLines.map((forwardLine, lineIndex) => {
-                  if (!showAllLines && forwardLineLabels[lineIndex] !== 'NLC') {
+                  const lineLabel = forwardLineLabels[lineIndex];
+                  if (selectedLine !== 'All' && selectedLine !== lineLabel) {
                       return null;
                   }
                   return (
                       <React.Fragment key={`fwd-line-${lineIndex}`}>
                         <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-                          {forwardLineLabels[lineIndex]}
+                          {lineLabel}
                         </div>
                         {forwardPositions.map((position) => {
                           const menuId = `fwd-${lineIndex}-${position}`;
@@ -1115,13 +1120,14 @@ const App: React.FC = () => {
 
                 {/* Defense Pairings */}
                 {lineup.defensePairings.map((defensePair, pairIndex) => {
-                   if (!showAllLines && defensePairingLabels[pairIndex] !== 'NLC') {
-                      return null;
-                  }
+                   const lineLabel = defensePairingLabels[pairIndex];
+                   if (selectedLine !== 'All' && selectedLine !== lineLabel) {
+                       return null;
+                   }
                   return (
                       <React.Fragment key={`def-pair-${pairIndex}`}>
                           <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-                          {defensePairingLabels[pairIndex]}
+                          {lineLabel}
                           </div>
                           {defensePositions.map((position) => {
                             const menuId = `def-${pairIndex}-${position}`;
