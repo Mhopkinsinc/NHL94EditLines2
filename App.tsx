@@ -912,7 +912,7 @@ const App: React.FC = () => {
     <div className="min-h-screen text-white font-sans" onDragEnd={handleDragEnd}>
         <header className="bg-[#1A222C] py-2 px-4 md:px-8 flex justify-between items-center shadow-lg border-b border-black/30">
             <div className="text-lg font-bold tracking-wider text-gray-300">
-                94' Team Line Editor & Player Viewer
+                94' Line Editor & Attribute Viewer
             </div>
             <div className="flex items-center gap-4">
                 <SegaGenesisLogo aria-label="Sega Genesis Logo" className="h-6 text-white" />                
