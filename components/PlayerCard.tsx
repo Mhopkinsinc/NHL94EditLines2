@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import type { Player } from '../types';
 import { AnchorIcon, DotsIcon, FeatherIcon, RookieIcon, WaiversIcon } from './icons';
+import { torontoLogoDataUri } from './TorontoLogo';
+import { chicagoLogoDataUri } from './ChicagoLogo';
 
 interface PlayerCardProps {
   player: Player;
@@ -97,7 +99,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
     if (selectedTeamName === 'Toronto Maple Leafs') {
       return {
         ...style,
-        backgroundImage: 'url(https://puckgm.puckpedia.com/icons/8-dark.svg)',
+        backgroundImage: `url(${torontoLogoDataUri})`,
         backgroundSize: '160%',
         backgroundPosition: '80% 50%',
         opacity: 0.15,
@@ -105,7 +107,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
     } else if (selectedTeamName === 'Chicago Blackhawks') {
       return {
         ...style,
-        backgroundImage: 'url(https://puckgm.puckpedia.com/icons/22.svg)',
+        backgroundImage: `url(${chicagoLogoDataUri})`,
         backgroundSize: '160%',
         backgroundPosition: '80% 50%',
         opacity: 0.15,
