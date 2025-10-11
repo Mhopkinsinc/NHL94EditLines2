@@ -250,17 +250,17 @@ const App: React.FC = () => {
                     } 
                 },
                 { 
-                    element: '#tour-step-3', 
-                    popover: { 
-                        title: 'Track Changes', 
-                        description: 'Every change you make is tracked. Click this icon to view your edit history and undo any actions.' 
-                    } 
-                },
-                { 
                     element: '#tour-step-4', 
                     popover: { 
                         title: 'View ROM Info', 
                         description: 'Click this icon to view detailed information about the loaded ROM, including all teams and players found.' 
+                    } 
+                },
+                { 
+                    element: '#tour-step-3', 
+                    popover: { 
+                        title: 'Track Changes', 
+                        description: 'Every change you make is tracked. Click this icon to view your edit history and undo any actions.' 
                     } 
                 },
                 { 
