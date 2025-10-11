@@ -15,6 +15,7 @@ interface AttributeCardModalProps {
 interface AttributeBarProps {
     label: string;
     value: number;
+    fullName?: string;
 }
 
 const getBarColor = (value: number) => {
@@ -24,12 +25,17 @@ const getBarColor = (value: number) => {
 };
 
 // Updated AttributeBar to be more compact to fix alignment
-const AttributeBar: React.FC<AttributeBarProps> = ({ label, value }) => {
+const AttributeBar: React.FC<AttributeBarProps> = ({ label, value, fullName }) => {
     const barColor = getBarColor(value);
 
     return (
         <div className="grid grid-cols-[auto_auto] justify-start items-center gap-x-2 mb-1.5">
-            <span className="w-20 text-xs uppercase tracking-wider text-gray-400 font-semibold truncate">{label}</span>
+            <span 
+                className="w-20 text-xs uppercase tracking-wider text-gray-400 font-semibold truncate"
+                title={fullName || label}
+            >
+                {label}
+            </span>
             <div className="flex items-center gap-0.5">
                 {Array.from({ length: 6 }).map((_, i) => (
                     <div
@@ -192,8 +198,8 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                           value1={attributes.shtpower}
                           value2={isGoalie ? undefined : attributes.shtacc}
                          >
-                            <AttributeBar label={isGoalie ? "Puck Control" : "SHT Power"} value={attributes.shtpower} />
-                            {!isGoalie && <AttributeBar label="SHT ACC" value={attributes.shtacc} />}
+                            <AttributeBar label={isGoalie ? "Puck Control" : "SHT Power"} value={attributes.shtpower} fullName={isGoalie ? "Puck Control" : "Shot Power"} />
+                            {!isGoalie && <AttributeBar label="SHT ACC" value={attributes.shtacc} fullName="Shot Accuracy" />}
                         </AttributeCategory>
                         
                         {isGoalie ? (
@@ -211,8 +217,8 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                     value1={attributes.oawareness}
                                     value2={attributes.dawareness}
                                 >
-                                    <AttributeBar label="Off. Aware" value={attributes.oawareness} />
-                                    <AttributeBar label="Def. Aware" value={attributes.dawareness} />
+                                    <AttributeBar label="Off. Aware" value={attributes.oawareness} fullName="Offensive Awareness" />
+                                    <AttributeBar label="Def. Aware" value={attributes.dawareness} fullName="Defensive Awareness" />
                                 </AttributeCategory>
                                 <AttributeCategory 
                                     title="Glove"
@@ -231,15 +237,15 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                     value2={attributes.passacc}
                                 >
                                     <AttributeBar label="Stickhand" value={attributes.stickhand} />
-                                    <AttributeBar label="Pass ACC" value={attributes.passacc} />                            
+                                    <AttributeBar label="Pass ACC" value={attributes.passacc} fullName="Passing Accuracy" />                            
                                 </AttributeCategory>
                                 <AttributeCategory 
                                     title="Awareness"
                                     value1={attributes.oawareness}
                                     value2={attributes.dawareness}
                                 >
-                                    <AttributeBar label="Off. Aware" value={attributes.oawareness} />
-                                    <AttributeBar label="Def. Aware" value={attributes.dawareness} />
+                                    <AttributeBar label="Off. Aware" value={attributes.oawareness} fullName="Offensive Awareness" />
+                                    <AttributeBar label="Def. Aware" value={attributes.dawareness} fullName="Defensive Awareness" />
                                 </AttributeCategory>
                                 <AttributeCategory 
                                     title="Physical"
