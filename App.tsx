@@ -1030,7 +1030,7 @@ const App: React.FC = () => {
                   <div className={`transition-opacity duration-300 ${isDraggingOver ? 'opacity-0' : 'opacity-100'} flex flex-col items-center px-4`}>
                       <h1 className="text-5xl font-extrabold text-sky-300 mb-4" style={{textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 10px rgba(125, 211, 252, 0.3)'}}> NHL 94 Line Editor </h1>
                       <UploadRomIcon className="w-16 h-16 text-gray-500 mb-4" />
-                      <h2 className="text-3xl font-bold mb-2">Upload your ROM file</h2>
+                      <h2 className="text-3xl font-bold mb-2 animate-bounce">Upload your ROM file</h2>
                       <p className="text-gray-400 mb-6">
                           Drag & drop a 
                           <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.bin</code>, 
