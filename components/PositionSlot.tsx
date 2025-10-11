@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import type { Player, PositionType } from '../types';
 import { PlayerCard } from './PlayerCard';
+import { chicagoLogoDataUri } from './ChicagoLogo';
+import { torontoLogoDataUri } from './TorontoLogo';
+import { nhlLogoDataUri } from './NhlLogo';
 
 interface PositionSlotProps {
   index: number;
@@ -82,21 +85,21 @@ export const PositionSlot: React.FC<PositionSlotProps> = ({ index, positionType,
     if (selectedTeamName === 'Toronto Maple Leafs') {
       return {
         ...style,
-        backgroundImage: 'url(https://puckgm.puckpedia.com/icons/8-dark.svg)',
+        backgroundImage: `url(${torontoLogoDataUri})`,
         backgroundSize: '160%',
         backgroundPosition: '80% 50%',
       };
     } else if (selectedTeamName === 'Chicago Blackhawks') {
       return {
         ...style,
-        backgroundImage: 'url(https://puckgm.puckpedia.com/icons/22.svg)',
+        backgroundImage: `url(${chicagoLogoDataUri})`,
         backgroundSize: '160%',
         backgroundPosition: '80% 50%',
       };
     }
     return {
       ...style,
-      backgroundImage: 'url(https://www-league.nhlstatic.com/images/logos/league-dark/133.svg)',
+      backgroundImage: `url(${nhlLogoDataUri})`,
       backgroundSize: 'contain',
       backgroundPosition: 'center',
     };

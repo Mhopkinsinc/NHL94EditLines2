@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo } from 'react';
 import type { Player } from '../types';
 import { AnchorIcon, FeatherIcon } from './icons';
+import { chicagoLogoDataUri } from './ChicagoLogo';
+import { torontoLogoDataUri } from './TorontoLogo';
+import { nhlLogoDataUri } from './NhlLogo';
+
 
 interface AttributeCardModalProps {
   player: Player;
@@ -81,12 +85,12 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
 
     const teamLogoUrl = useMemo(() => {
         if (selectedTeamName === 'Toronto Maple Leafs') {
-            return 'https://puckgm.puckpedia.com/icons/8-dark.svg';
+            return `${torontoLogoDataUri}`;
         }
         if (selectedTeamName === 'Chicago Blackhawks') {
-            return 'https://puckgm.puckpedia.com/icons/22.svg';
+            return `${chicagoLogoDataUri}`;
         }
-        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/NHL_Logo_former.svg/247px-NHL_Logo_former.svg.png?20241024225219';
+        return `${nhlLogoDataUri}`;
     }, [selectedTeamName]);
 
     const backgroundStyle = useMemo(() => {
@@ -96,7 +100,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
         if (selectedTeamName === 'Toronto Maple Leafs') {
           return {
             ...style,
-            backgroundImage: 'url(https://puckgm.puckpedia.com/icons/8-dark.svg)',
+            backgroundImage: `url(${torontoLogoDataUri})`,
             backgroundSize: '150%',
             backgroundPosition: '50% 10%',
             opacity: 0.1,
@@ -104,7 +108,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
         } else if (selectedTeamName === 'Chicago Blackhawks') {
           return {
             ...style,
-            backgroundImage: 'url(https://puckgm.puckpedia.com/icons/22.svg)',
+            backgroundImage: `url(${chicagoLogoDataUri})`,
             backgroundSize: '150%',
             backgroundPosition: '50% 10%',
             opacity: 0.05,
@@ -112,7 +116,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
         }
         return {
           ...style,
-          backgroundImage: 'url(https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/NHL_Logo_former.svg/247px-NHL_Logo_former.svg.png?20241024225219)',
+          backgroundImage: `url(${nhlLogoDataUri})`,
           backgroundSize: 'contain',
           backgroundPosition: '50% 10%',
           opacity: 0.05,

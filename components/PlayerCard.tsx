@@ -3,6 +3,7 @@ import type { Player } from '../types';
 import { AnchorIcon, DotsIcon, FeatherIcon, RookieIcon, WaiversIcon } from './icons';
 import { torontoLogoDataUri } from './TorontoLogo';
 import { chicagoLogoDataUri } from './ChicagoLogo';
+import { nhlLogoDataUri } from './NhlLogo';
 
 interface PlayerCardProps {
   player: Player;
@@ -115,9 +116,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
     }
     return {
       ...style,
-      backgroundImage: 'url(https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/NHL_Logo_former.svg/247px-NHL_Logo_former.svg.png?20241024225219)',
-      backgroundSize: '90%',
-        backgroundPosition: '80% 50%',
+         backgroundImage: `url(${nhlLogoDataUri})`,
+      backgroundSize: '80%',
+        backgroundPosition: '-60% 50%',
       opacity: 0.1,
     };
   }, [selectedTeamName]);
