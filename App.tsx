@@ -977,17 +977,7 @@ const App: React.FC = () => {
                     Save ROM
                 </button>
                 {romInfo && (
-                    <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
-                         <button
-                            id="tour-step-3"
-                            onClick={handleOpenHistoryModal}
-                            className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
-                            aria-label="Show Change History"
-                            disabled={historyLog.length === 0}
-                            title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
-                        >
-                            <HistoryIcon className="w-5 h-5" />
-                        </button>
+                    <>
                         <button
                             id="tour-step-4"
                             onClick={handleOpenRomInfoModal}
@@ -997,15 +987,27 @@ const App: React.FC = () => {
                         >
                             <EASportsLogo className="w-5 h-5" />
                         </button>
-                        <button
-                            onClick={handleResetApp}
-                            className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
-                            aria-label="Unload ROM and start over"
-                            title="Unload ROM and start over"
-                        >
-                            <ResetIcon className="w-5 h-5 text-red-500" />
-                        </button>
-                    </div>
+                        <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
+                             <button
+                                id="tour-step-3"
+                                onClick={handleOpenHistoryModal}
+                                className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
+                                aria-label="Show Change History"
+                                disabled={historyLog.length === 0}
+                                title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
+                            >
+                                <HistoryIcon className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={handleResetApp}
+                                className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
+                                aria-label="Unload ROM and start over"
+                                title="Unload ROM and start over"
+                            >
+                                <ResetIcon className="w-5 h-5 text-red-500" />
+                            </button>
+                        </div>
+                    </>
                 )}
               </div>
             </div>
