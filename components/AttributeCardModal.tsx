@@ -236,7 +236,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                     value1={attributes.stickhand}
                                     value2={attributes.passacc}
                                 >
-                                    <AttributeBar label="Stickhand" value={attributes.stickhand} />
+                                    <AttributeBar label="Stk Handl" value={attributes.stickhand} fullName="Stick Handling" />
                                     <AttributeBar label="Pass ACC" value={attributes.passacc} fullName="Passing Accuracy" />                            
                                 </AttributeCategory>
                                 <AttributeCategory 

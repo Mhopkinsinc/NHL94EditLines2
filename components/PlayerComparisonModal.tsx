@@ -9,12 +9,13 @@ interface PlayerComparisonModalProps {
 
 const ComparisonRow: React.FC<{
   label: string;
+  fullName?: string;
   value1: React.ReactNode;
   value2: React.ReactNode;
   numericValue1: number | string;
   numericValue2: number | string;
   higherIsBetter?: boolean;
-}> = ({ label, value1, value2, numericValue1, numericValue2, higherIsBetter = true }) => {
+}> = ({ label, fullName, value1, value2, numericValue1, numericValue2, higherIsBetter = true }) => {
   let p1Better = false;
   let p2Better = false;
 
@@ -40,7 +41,7 @@ const ComparisonRow: React.FC<{
       <span className={`${valueClasses} ${p1Classes} text-right flex justify-end items-center gap-1`}>
         {p1DisplayValue}
       </span>
-      <span className="text-center text-gray-400 uppercase text-xs w-28 truncate" title={label}>
+      <span className="text-center text-gray-400 uppercase text-xs w-28 truncate" title={fullName || label}>
         {label}
       </span>
       <span className={`${valueClasses} ${p2Classes} text-left flex justify-start items-center gap-1`}>
@@ -135,18 +136,18 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
 
              <div>
               <h4 className="font-bold text-sky-400 text-center mb-1">Awareness</h4>
-              <ComparisonRow label="Off. Aware" value1={p1.attributes.oawareness} numericValue1={p1.attributes.oawareness} value2={p2.attributes.oawareness} numericValue2={p2.attributes.oawareness} />
-              <ComparisonRow label="Def. Aware" value1={p1.attributes.dawareness} numericValue1={p1.attributes.dawareness} value2={p2.attributes.dawareness} numericValue2={p2.attributes.dawareness} />
+              <ComparisonRow label="Off. Aware" fullName="Offensive Awareness" value1={p1.attributes.oawareness} numericValue1={p1.attributes.oawareness} value2={p2.attributes.oawareness} numericValue2={p2.attributes.oawareness} />
+              <ComparisonRow label="Def. Aware" fullName="Defensive Awareness" value1={p1.attributes.dawareness} numericValue1={p1.attributes.dawareness} value2={p2.attributes.dawareness} numericValue2={p2.attributes.dawareness} />
             </div>
             
             {!bothAreGoalies && (
               <>
                 <div>
                     <h4 className="font-bold text-sky-400 text-center mb-1">Shooting & Playmaking</h4>
-                    <ComparisonRow label="SHT Power" value1={!p1IsGoalie ? p1.attributes.shtpower : '-'} numericValue1={!p1IsGoalie ? p1.attributes.shtpower : '-'} value2={!p2IsGoalie ? p2.attributes.shtpower : '-'} numericValue2={!p2IsGoalie ? p2.attributes.shtpower : '-'} />
-                    <ComparisonRow label="SHT ACC" value1={!p1IsGoalie ? p1.attributes.shtacc : '-'} numericValue1={!p1IsGoalie ? p1.attributes.shtacc : '-'} value2={!p2IsGoalie ? p2.attributes.shtacc : '-'} numericValue2={!p2IsGoalie ? p2.attributes.shtacc : '-'} />
-                    <ComparisonRow label="Stickhand" value1={!p1IsGoalie ? p1.attributes.stickhand : '-'} numericValue1={!p1IsGoalie ? p1.attributes.stickhand : '-'} value2={!p2IsGoalie ? p2.attributes.stickhand : '-'} numericValue2={!p2IsGoalie ? p2.attributes.stickhand : '-'} />
-                    <ComparisonRow label="Pass ACC" value1={!p1IsGoalie ? p1.attributes.passacc : '-'} numericValue1={!p1IsGoalie ? p1.attributes.passacc : '-'} value2={!p2IsGoalie ? p2.attributes.passacc : '-'} numericValue2={!p2IsGoalie ? p2.attributes.passacc : '-'} />
+                    <ComparisonRow label="SHT Power" fullName="Shot Power" value1={!p1IsGoalie ? p1.attributes.shtpower : '-'} numericValue1={!p1IsGoalie ? p1.attributes.shtpower : '-'} value2={!p2IsGoalie ? p2.attributes.shtpower : '-'} numericValue2={!p2IsGoalie ? p2.attributes.shtpower : '-'} />
+                    <ComparisonRow label="SHT ACC" fullName="Shot Accuracy" value1={!p1IsGoalie ? p1.attributes.shtacc : '-'} numericValue1={!p1IsGoalie ? p1.attributes.shtacc : '-'} value2={!p2IsGoalie ? p2.attributes.shtacc : '-'} numericValue2={!p2IsGoalie ? p2.attributes.shtacc : '-'} />
+                    <ComparisonRow label="Stk Handl" fullName="Stick Handling" value1={!p1IsGoalie ? p1.attributes.stickhand : '-'} numericValue1={!p1IsGoalie ? p1.attributes.stickhand : '-'} value2={!p2IsGoalie ? p2.attributes.stickhand : '-'} numericValue2={!p2IsGoalie ? p2.attributes.stickhand : '-'} />
+                    <ComparisonRow label="Pass ACC" fullName="Passing Accuracy" value1={!p1IsGoalie ? p1.attributes.passacc : '-'} numericValue1={!p1IsGoalie ? p1.attributes.passacc : '-'} value2={!p2IsGoalie ? p2.attributes.passacc : '-'} numericValue2={!p2IsGoalie ? p2.attributes.passacc : '-'} />
                 </div>
                 <div>
                     <h4 className="font-bold text-sky-400 text-center mb-1">Physical</h4>
