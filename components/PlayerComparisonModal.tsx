@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import type { Player } from '../types';
+import { AnchorIcon, FeatherIcon } from './icons';
 
 interface PlayerComparisonModalProps {
   players: { p1: Player; p2: Player };
@@ -8,15 +9,17 @@ interface PlayerComparisonModalProps {
 
 const ComparisonRow: React.FC<{
   label: string;
-  value1: number | string;
-  value2: number | string;
+  value1: React.ReactNode;
+  value2: React.ReactNode;
+  numericValue1: number | string;
+  numericValue2: number | string;
   higherIsBetter?: boolean;
-}> = ({ label, value1, value2, higherIsBetter = true }) => {
+}> = ({ label, value1, value2, numericValue1, numericValue2, higherIsBetter = true }) => {
   let p1Better = false;
   let p2Better = false;
 
-  const numValue1 = typeof value1 === 'number' ? value1 : -1;
-  const numValue2 = typeof value2 === 'number' ? value2 : -1;
+  const numValue1 = typeof numericValue1 === 'number' ? numericValue1 : -1;
+  const numValue2 = typeof numericValue2 === 'number' ? numericValue2 : -1;
 
   if (numValue1 !== -1 && numValue2 !== -1) {
     p1Better = higherIsBetter ? numValue1 > numValue2 : numValue1 < numValue2;
@@ -26,19 +29,21 @@ const ComparisonRow: React.FC<{
   const valueClasses = "font-bold font-mono text-lg";
   const p1Classes = p1Better ? 'text-green-400' : 'text-gray-300';
   const p2Classes = p2Better ? 'text-green-400' : 'text-gray-300';
-  const p1DisplayValue = typeof value1 === 'string' ? <span className="text-gray-600">{value1}</span> : value1;
-  const p2DisplayValue = typeof value2 === 'string' ? <span className="text-gray-600">{value2}</span> : value2;
+  
+  // Display value can be a node (for weight with icon) or a simple value
+  const p1DisplayValue = typeof numericValue1 === 'string' ? <span className="text-gray-600">{value1}</span> : value1;
+  const p2DisplayValue = typeof numericValue2 === 'string' ? <span className="text-gray-600">{value2}</span> : value2;
 
 
   return (
     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm py-1.5 border-b border-white/10">
-      <span className={`${valueClasses} ${p1Classes} text-right`}>
+      <span className={`${valueClasses} ${p1Classes} text-right flex justify-end items-center gap-1`}>
         {p1DisplayValue}
       </span>
       <span className="text-center text-gray-400 uppercase text-xs w-28 truncate" title={label}>
         {label}
       </span>
-      <span className={`${valueClasses} ${p2Classes} text-left`}>
+      <span className={`${valueClasses} ${p2Classes} text-left flex justify-start items-center gap-1`}>
         {p2DisplayValue}
       </span>
     </div>
@@ -66,6 +71,31 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
   const p1Fighting = Math.ceil(p1.attributes.fighting / 2);
   const p2Fighting = Math.ceil(p2.attributes.fighting / 2);
 
+  const p1IsLightweight = p1.attributes.weight <= 5;
+  const p1IsHeavyweight = p1.attributes.weight >= 10;
+  const p2IsLightweight = p2.attributes.weight <= 5;
+  const p2IsHeavyweight = p2.attributes.weight >= 10;
+
+  const p1Weight = 140 + (8 * p1.attributes.weight);
+  const p2Weight = 140 + (8 * p2.attributes.weight);
+  
+  const p1WeightDisplay = (
+    <>
+      {p1IsLightweight && <FeatherIcon className="w-4 h-4 text-white" />}
+      {p1IsHeavyweight && <AnchorIcon className="w-4 h-4 text-white" />}
+      {p1Weight}
+    </>
+  );
+
+  const p2WeightDisplay = (
+    <>
+      {p2Weight}
+      {p2IsLightweight && <FeatherIcon className="w-4 h-4 text-white" />}
+      {p2IsHeavyweight && <AnchorIcon className="w-4 h-4 text-white" />}
+    </>
+  );
+
+
   return (
     <div
       className="fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-4 transition-opacity"
@@ -88,9 +118,9 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
             <h3 className="text-lg font-bold text-white truncate text-left" title={p2.name}>{p2.name}</h3>
           </div>
            <div className="grid grid-cols-[1fr_auto_1fr] items-center text-sm">
-             <p className="text-gray-400 text-right">{p1.role}</p>
+             <p className="text-gray-400 text-right px-2">{p1.role}</p>
              <div />
-             <p className="text-gray-400 text-left">{p2.role}</p>
+             <p className="text-gray-400 text-left px-2">{p2.role}</p>
           </div>
         </div>
 
@@ -99,31 +129,38 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
           <div className="space-y-4">
             <div>
               <h4 className="font-bold text-sky-400 text-center mb-1">Skating</h4>
-              <ComparisonRow label="Agility" value1={p1.attributes.agility} value2={p2.attributes.agility} />
-              <ComparisonRow label="Speed" value1={p1.attributes.speed} value2={p2.attributes.speed} />
+              <ComparisonRow label="Agility" value1={p1.attributes.agility} numericValue1={p1.attributes.agility} value2={p2.attributes.agility} numericValue2={p2.attributes.agility} />
+              <ComparisonRow label="Speed" value1={p1.attributes.speed} numericValue1={p1.attributes.speed} value2={p2.attributes.speed} numericValue2={p2.attributes.speed} />
             </div>
 
              <div>
               <h4 className="font-bold text-sky-400 text-center mb-1">Awareness</h4>
-              <ComparisonRow label="Off. Aware" value1={p1.attributes.oawareness} value2={p2.attributes.oawareness} />
-              <ComparisonRow label="Def. Aware" value1={p1.attributes.dawareness} value2={p2.attributes.dawareness} />
+              <ComparisonRow label="Off. Aware" value1={p1.attributes.oawareness} numericValue1={p1.attributes.oawareness} value2={p2.attributes.oawareness} numericValue2={p2.attributes.oawareness} />
+              <ComparisonRow label="Def. Aware" value1={p1.attributes.dawareness} numericValue1={p1.attributes.dawareness} value2={p2.attributes.dawareness} numericValue2={p2.attributes.dawareness} />
             </div>
             
             {!bothAreGoalies && (
               <>
                 <div>
-                    <h4 className="font-bold text-sky-400 text-center mb-1">Skater Skills</h4>
-                    <ComparisonRow label="SHT Power" value1={!p1IsGoalie ? p1.attributes.shtpower : '-'} value2={!p2IsGoalie ? p2.attributes.shtpower : '-'} />
-                    <ComparisonRow label="SHT ACC" value1={!p1IsGoalie ? p1.attributes.shtacc : '-'} value2={!p2IsGoalie ? p2.attributes.shtacc : '-'} />
-                    <ComparisonRow label="Stickhand" value1={!p1IsGoalie ? p1.attributes.stickhand : '-'} value2={!p2IsGoalie ? p2.attributes.stickhand : '-'} />
-                    <ComparisonRow label="Pass ACC" value1={!p1IsGoalie ? p1.attributes.passacc : '-'} value2={!p2IsGoalie ? p2.attributes.passacc : '-'} />
+                    <h4 className="font-bold text-sky-400 text-center mb-1">Shooting & Playmaking</h4>
+                    <ComparisonRow label="SHT Power" value1={!p1IsGoalie ? p1.attributes.shtpower : '-'} numericValue1={!p1IsGoalie ? p1.attributes.shtpower : '-'} value2={!p2IsGoalie ? p2.attributes.shtpower : '-'} numericValue2={!p2IsGoalie ? p2.attributes.shtpower : '-'} />
+                    <ComparisonRow label="SHT ACC" value1={!p1IsGoalie ? p1.attributes.shtacc : '-'} numericValue1={!p1IsGoalie ? p1.attributes.shtacc : '-'} value2={!p2IsGoalie ? p2.attributes.shtacc : '-'} numericValue2={!p2IsGoalie ? p2.attributes.shtacc : '-'} />
+                    <ComparisonRow label="Stickhand" value1={!p1IsGoalie ? p1.attributes.stickhand : '-'} numericValue1={!p1IsGoalie ? p1.attributes.stickhand : '-'} value2={!p2IsGoalie ? p2.attributes.stickhand : '-'} numericValue2={!p2IsGoalie ? p2.attributes.stickhand : '-'} />
+                    <ComparisonRow label="Pass ACC" value1={!p1IsGoalie ? p1.attributes.passacc : '-'} numericValue1={!p1IsGoalie ? p1.attributes.passacc : '-'} value2={!p2IsGoalie ? p2.attributes.passacc : '-'} numericValue2={!p2IsGoalie ? p2.attributes.passacc : '-'} />
                 </div>
                 <div>
                     <h4 className="font-bold text-sky-400 text-center mb-1">Physical</h4>
-                    <ComparisonRow label="Aggressive" value1={!p1IsGoalie ? p1.attributes.aggressiveness : '-'} value2={!p2IsGoalie ? p2.attributes.aggressiveness : '-'} />
-                    <ComparisonRow label="Checking" value1={!p1IsGoalie ? p1.attributes.checking : '-'} value2={!p2IsGoalie ? p2.attributes.checking : '-'} />
-                    <ComparisonRow label="Fighting" value1={!p1IsGoalie ? p1Fighting : '-'} value2={!p2IsGoalie ? p2Fighting : '-'} />
-                    <ComparisonRow label="Weight" value1={140 + (8 * p1.attributes.weight)} value2={140 + (8 * p2.attributes.weight)} />
+                    <ComparisonRow label="Aggressive" value1={!p1IsGoalie ? p1.attributes.aggressiveness : '-'} numericValue1={!p1IsGoalie ? p1.attributes.aggressiveness : '-'} value2={!p2IsGoalie ? p2.attributes.aggressiveness : '-'} numericValue2={!p2IsGoalie ? p2.attributes.aggressiveness : '-'} />
+                    <ComparisonRow label="Checking" value1={!p1IsGoalie ? p1.attributes.checking : '-'} numericValue1={!p1IsGoalie ? p1.attributes.checking : '-'} value2={!p2IsGoalie ? p2.attributes.checking : '-'} numericValue2={!p2IsGoalie ? p2.attributes.checking : '-'} />
+                    <ComparisonRow label="Fighting" value1={!p1IsGoalie ? p1Fighting : '-'} numericValue1={!p1IsGoalie ? p1Fighting : '-'} value2={!p2IsGoalie ? p2Fighting : '-'} numericValue2={!p2IsGoalie ? p2Fighting : '-'} />
+                    <ComparisonRow 
+                        label="Weight" 
+                        value1={p1WeightDisplay}
+                        numericValue1={p1Weight}
+                        value2={p2WeightDisplay}
+                        numericValue2={p2Weight}
+                        higherIsBetter={false}
+                    />
                 </div>
               </>
             )}
@@ -131,11 +168,11 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
             {(p1IsGoalie || p2IsGoalie) && (
                 <div>
                     <h4 className="font-bold text-sky-400 text-center mb-1">Goalie Skills</h4>
-                    <ComparisonRow label="Puck Control" value1={p1IsGoalie ? p1.attributes.shtpower : '-'} value2={p2IsGoalie ? p2.attributes.shtpower : '-'} />
-                    <ComparisonRow label="Stick Left" value1={p1IsGoalie ? p1.attributes.roughness : '-'} value2={p2IsGoalie ? p2.attributes.roughness : '-'} />
-                    <ComparisonRow label="Stick Right" value1={p1IsGoalie ? p1.attributes.endurance : '-'} value2={p2IsGoalie ? p2.attributes.endurance : '-'} />
-                    <ComparisonRow label="Glove Left" value1={p1IsGoalie ? p1.attributes.aggressiveness : '-'} value2={p2IsGoalie ? p2.attributes.aggressiveness : '-'} />
-                    <ComparisonRow label="Glove Right" value1={p1IsGoalie ? p1.attributes.passacc : '-'} value2={p2IsGoalie ? p2.attributes.passacc : '-'} />
+                    <ComparisonRow label="Puck Control" value1={p1IsGoalie ? p1.attributes.shtpower : '-'} numericValue1={p1IsGoalie ? p1.attributes.shtpower : '-'} value2={p2IsGoalie ? p2.attributes.shtpower : '-'} numericValue2={p2IsGoalie ? p2.attributes.shtpower : '-'} />
+                    <ComparisonRow label="Stick Left" value1={p1IsGoalie ? p1.attributes.roughness : '-'} numericValue1={p1IsGoalie ? p1.attributes.roughness : '-'} value2={p2IsGoalie ? p2.attributes.roughness : '-'} numericValue2={p2IsGoalie ? p2.attributes.roughness : '-'} />
+                    <ComparisonRow label="Stick Right" value1={p1IsGoalie ? p1.attributes.endurance : '-'} numericValue1={p1IsGoalie ? p1.attributes.endurance : '-'} value2={p2IsGoalie ? p2.attributes.endurance : '-'} numericValue2={p2IsGoalie ? p2.attributes.endurance : '-'} />
+                    <ComparisonRow label="Glove Left" value1={p1IsGoalie ? p1.attributes.aggressiveness : '-'} numericValue1={p1IsGoalie ? p1.attributes.aggressiveness : '-'} value2={p2IsGoalie ? p2.attributes.aggressiveness : '-'} numericValue2={p2IsGoalie ? p2.attributes.aggressiveness : '-'} />
+                    <ComparisonRow label="Glove Right" value1={p1IsGoalie ? p1.attributes.passacc : '-'} numericValue1={p1IsGoalie ? p1.attributes.passacc : '-'} value2={p2IsGoalie ? p2.attributes.passacc : '-'} numericValue2={p2IsGoalie ? p2.attributes.passacc : '-'} />
                 </div>
             )}
             
