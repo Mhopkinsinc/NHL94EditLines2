@@ -35,6 +35,11 @@ const FilterButton: React.FC<{
   );
 };
 
+const getLastName = (name: string): string => {
+    const parts = name.split(' ');
+    return parts[parts.length - 1];
+};
+
 export const Roster: React.FC<RosterProps> = ({ players, onDragStart, onDrop, onViewAttributes, onCompare, isDragSource, draggedPlayer, openMenuId, onToggleMenu, onCloseMenu, selectedTeamName, isComparisonMode, firstComparisonPlayer }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [positionFilter, setPositionFilter] = useState<'All' | 'Forward' | 'Defenseman' | 'Goalie'>('All');
@@ -78,10 +83,12 @@ export const Roster: React.FC<RosterProps> = ({ players, onDragStart, onDrop, on
     }
 
     return [...filtered].sort((a, b) => {
+        const lastNameA = getLastName(a.name);
+        const lastNameB = getLastName(b.name);
         if (sortOrder === 'asc') {
-            return a.name.localeCompare(b.name);
+            return lastNameA.localeCompare(lastNameB);
         } else {
-            return b.name.localeCompare(a.name);
+            return lastNameB.localeCompare(lastNameA);
         }
     });
   }, [players, positionFilter, sortOrder]);
