@@ -163,14 +163,6 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
             
             <div>
               <h4 className="font-bold text-sky-400 text-center mb-1">Physical</h4>
-              <ComparisonRow 
-                  label="Weight" 
-                  value1={p1WeightDisplay}
-                  numericValue1={p1Weight}
-                  value2={p2WeightDisplay}
-                  numericValue2={p2Weight}
-                  higherIsBetter={false}
-              />
               {!bothAreGoalies && (
                 <>
                   <ComparisonRow label="Aggressiveness" value1={p1.attributes.aggressiveness} numericValue1={p1.attributes.aggressiveness} value2={p2.attributes.aggressiveness} numericValue2={p2.attributes.aggressiveness} />
@@ -179,6 +171,14 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
                   <ComparisonRow label="Fighting" value1={p1Fighting} numericValue1={p1Fighting} value2={p2Fighting} numericValue2={p2Fighting} />
                 </>
               )}
+              <ComparisonRow 
+                  label="Weight" 
+                  value1={p1WeightDisplay}
+                  numericValue1={p1Weight}
+                  value2={p2WeightDisplay}
+                  numericValue2={p2Weight}
+                  higherIsBetter={false}
+              />
             </div>
           </div>
         </div>
