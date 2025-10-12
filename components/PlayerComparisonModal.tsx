@@ -141,43 +141,45 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
             </div>
             
             {!bothAreGoalies && (
-              <>
-                <div>
-                    <h4 className="font-bold text-sky-400 text-center mb-1">Shooting & Playmaking</h4>
-                    <ComparisonRow label="SHT Power" fullName="Shot Power" value1={!p1IsGoalie ? p1.attributes.shtpower : '-'} numericValue1={!p1IsGoalie ? p1.attributes.shtpower : '-'} value2={!p2IsGoalie ? p2.attributes.shtpower : '-'} numericValue2={!p2IsGoalie ? p2.attributes.shtpower : '-'} />
-                    <ComparisonRow label="SHT ACC" fullName="Shot Accuracy" value1={!p1IsGoalie ? p1.attributes.shtacc : '-'} numericValue1={!p1IsGoalie ? p1.attributes.shtacc : '-'} value2={!p2IsGoalie ? p2.attributes.shtacc : '-'} numericValue2={!p2IsGoalie ? p2.attributes.shtacc : '-'} />
-                    <ComparisonRow label="Stk Handl" fullName="Stick Handling" value1={!p1IsGoalie ? p1.attributes.stickhand : '-'} numericValue1={!p1IsGoalie ? p1.attributes.stickhand : '-'} value2={!p2IsGoalie ? p2.attributes.stickhand : '-'} numericValue2={!p2IsGoalie ? p2.attributes.stickhand : '-'} />
-                    <ComparisonRow label="Pass ACC" fullName="Passing Accuracy" value1={!p1IsGoalie ? p1.attributes.passacc : '-'} numericValue1={!p1IsGoalie ? p1.attributes.passacc : '-'} value2={!p2IsGoalie ? p2.attributes.passacc : '-'} numericValue2={!p2IsGoalie ? p2.attributes.passacc : '-'} />
-                </div>
-                <div>
-                    <h4 className="font-bold text-sky-400 text-center mb-1">Physical</h4>
-                    <ComparisonRow label="Aggressiveness" value1={!p1IsGoalie ? p1.attributes.aggressiveness : '-'} numericValue1={!p1IsGoalie ? p1.attributes.aggressiveness : '-'} value2={!p2IsGoalie ? p2.attributes.aggressiveness : '-'} numericValue2={!p2IsGoalie ? p2.attributes.aggressiveness : '-'} />
-                    <ComparisonRow label="Checking" value1={!p1IsGoalie ? p1.attributes.checking : '-'} numericValue1={!p1IsGoalie ? p1.attributes.checking : '-'} value2={!p2IsGoalie ? p2.attributes.checking : '-'} numericValue2={!p2IsGoalie ? p2.attributes.checking : '-'} />
-                    <ComparisonRow label="Endurance" value1={!p1IsGoalie ? p1.attributes.endurance : '-'} numericValue1={!p1IsGoalie ? p1.attributes.endurance : '-'} value2={!p2IsGoalie ? p2.attributes.endurance : '-'} numericValue2={!p2IsGoalie ? p2.attributes.endurance : '-'} />
-                    <ComparisonRow label="Fighting" value1={!p1IsGoalie ? p1Fighting : '-'} numericValue1={!p1IsGoalie ? p1Fighting : '-'} value2={!p2IsGoalie ? p2Fighting : '-'} numericValue2={!p2IsGoalie ? p2Fighting : '-'} />
-                    <ComparisonRow 
-                        label="Weight" 
-                        value1={p1WeightDisplay}
-                        numericValue1={p1Weight}
-                        value2={p2WeightDisplay}
-                        numericValue2={p2Weight}
-                        higherIsBetter={false}
-                    />
-                </div>
-              </>
+              <div>
+                  <h4 className="font-bold text-sky-400 text-center mb-1">Shooting & Playmaking</h4>
+                  <ComparisonRow label="SHT Power" fullName="Shot Power" value1={p1.attributes.shtpower} numericValue1={p1.attributes.shtpower} value2={p2.attributes.shtpower} numericValue2={p2.attributes.shtpower} />
+                  <ComparisonRow label="SHT ACC" fullName="Shot Accuracy" value1={p1.attributes.shtacc} numericValue1={p1.attributes.shtacc} value2={p2.attributes.shtacc} numericValue2={p2.attributes.shtacc} />
+                  <ComparisonRow label="Stk Handl" fullName="Stick Handling" value1={p1.attributes.stickhand} numericValue1={p1.attributes.stickhand} value2={p2.attributes.stickhand} numericValue2={p2.attributes.stickhand} />
+                  <ComparisonRow label="Pass ACC" fullName="Passing Accuracy" value1={p1.attributes.passacc} numericValue1={p1.attributes.passacc} value2={p2.attributes.passacc} numericValue2={p2.attributes.passacc} />
+              </div>
             )}
-
-            {(p1IsGoalie || p2IsGoalie) && (
+            
+            {bothAreGoalies && (
                 <div>
                     <h4 className="font-bold text-sky-400 text-center mb-1">Goalie Skills</h4>
-                    <ComparisonRow label="Puck Control" value1={p1IsGoalie ? p1.attributes.shtpower : '-'} numericValue1={p1IsGoalie ? p1.attributes.shtpower : '-'} value2={p2IsGoalie ? p2.attributes.shtpower : '-'} numericValue2={p2IsGoalie ? p2.attributes.shtpower : '-'} />
-                    <ComparisonRow label="Stick Left" value1={p1IsGoalie ? p1.attributes.roughness : '-'} numericValue1={p1IsGoalie ? p1.attributes.roughness : '-'} value2={p2IsGoalie ? p2.attributes.roughness : '-'} numericValue2={p2IsGoalie ? p2.attributes.roughness : '-'} />
-                    <ComparisonRow label="Stick Right" value1={p1IsGoalie ? p1.attributes.endurance : '-'} numericValue1={p1IsGoalie ? p1.attributes.endurance : '-'} value2={p2IsGoalie ? p2.attributes.endurance : '-'} numericValue2={p2IsGoalie ? p2.attributes.endurance : '-'} />
-                    <ComparisonRow label="Glove Left" value1={p1IsGoalie ? p1.attributes.aggressiveness : '-'} numericValue1={p1IsGoalie ? p1.attributes.aggressiveness : '-'} value2={p2IsGoalie ? p2.attributes.aggressiveness : '-'} numericValue2={p2IsGoalie ? p2.attributes.aggressiveness : '-'} />
-                    <ComparisonRow label="Glove Right" value1={p1IsGoalie ? p1.attributes.passacc : '-'} numericValue1={p1IsGoalie ? p1.attributes.passacc : '-'} value2={p2IsGoalie ? p2.attributes.passacc : '-'} numericValue2={p2IsGoalie ? p2.attributes.passacc : '-'} />
+                    <ComparisonRow label="Puck Control" value1={p1.attributes.shtpower} numericValue1={p1.attributes.shtpower} value2={p2.attributes.shtpower} numericValue2={p2.attributes.shtpower} />
+                    <ComparisonRow label="Stick Left" value1={p1.attributes.roughness} numericValue1={p1.attributes.roughness} value2={p2.attributes.roughness} numericValue2={p2.attributes.roughness} />
+                    <ComparisonRow label="Stick Right" value1={p1.attributes.endurance} numericValue1={p1.attributes.endurance} value2={p2.attributes.endurance} numericValue2={p2.attributes.endurance} />
+                    <ComparisonRow label="Glove Left" value1={p1.attributes.aggressiveness} numericValue1={p1.attributes.aggressiveness} value2={p2.attributes.aggressiveness} numericValue2={p2.attributes.aggressiveness} />
+                    <ComparisonRow label="Glove Right" value1={p1.attributes.passacc} numericValue1={p1.attributes.passacc} value2={p2.attributes.passacc} numericValue2={p2.attributes.passacc} />
                 </div>
             )}
             
+            <div>
+              <h4 className="font-bold text-sky-400 text-center mb-1">Physical</h4>
+              <ComparisonRow 
+                  label="Weight" 
+                  value1={p1WeightDisplay}
+                  numericValue1={p1Weight}
+                  value2={p2WeightDisplay}
+                  numericValue2={p2Weight}
+                  higherIsBetter={false}
+              />
+              {!bothAreGoalies && (
+                <>
+                  <ComparisonRow label="Aggressiveness" value1={p1.attributes.aggressiveness} numericValue1={p1.attributes.aggressiveness} value2={p2.attributes.aggressiveness} numericValue2={p2.attributes.aggressiveness} />
+                  <ComparisonRow label="Checking" value1={p1.attributes.checking} numericValue1={p1.attributes.checking} value2={p2.attributes.checking} numericValue2={p2.attributes.checking} />
+                  <ComparisonRow label="Endurance" value1={p1.attributes.endurance} numericValue1={p1.attributes.endurance} value2={p2.attributes.endurance} numericValue2={p2.attributes.endurance} />
+                  <ComparisonRow label="Fighting" value1={p1Fighting} numericValue1={p1Fighting} value2={p2Fighting} numericValue2={p2Fighting} />
+                </>
+              )}
+            </div>
           </div>
         </div>
 
