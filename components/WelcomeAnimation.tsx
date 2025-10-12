@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { torontoLogoDataUri } from './TorontoLogo';
 import { nhlLogoDataUri } from './NhlLogo';
 import { chicagoLogoDataUri } from './ChicagoLogo';
+import { nhl94LogoDataUri } from "./NHL94Logo";
 
 interface StyleConfig {
   id: number;
@@ -17,8 +18,8 @@ interface StyleConfig {
 export const WelcomeAnimation: React.FC = () => {
     const [styles, setStyles] = useState<StyleConfig[]>([]);
     const [keyframes, setKeyframes] = useState('');
-    const total = 10;
-    const logos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri];
+    const total = 20;
+    const logos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri];
 
     useEffect(() => {
         let keyframesString = '';
@@ -36,17 +37,23 @@ export const WelcomeAnimation: React.FC = () => {
                         transform: scale(${scale}) rotate(${endRotate}deg);
                     }
                 }
+                @keyframes fade${i} {
+                    0% { opacity: 0; }
+                    10% { opacity: 0.7; }
+                    90% { opacity: 0.7; }
+                    100% { opacity: 0; }
+                }
             `;
 
             generatedStyles.push({
                 id: i,
                 left: `${Math.random() * 120 - 20}%`,
-                animationName: `raise${i}`,
+                animationName: `raise${i}, fade${i}`,
                 animationDuration: `${6 + Math.random() * 15}s`,
                 animationDelay: `${Math.random() * 5 - 5}s`,
                 transform: `scale(${scale}) rotate(${initialRotate}deg)`,
                 zIndex: i - 7,
-                logoUri: logos[Math.floor(Math.random() * logos.length)],
+                logoUri: logos[(i - 1) % logos.length],
             });
         }
 
@@ -79,7 +86,7 @@ export const WelcomeAnimation: React.FC = () => {
                         src={style.logoUri} 
                         alt="" 
                         role="presentation"
-                        style={{ width: '60px', height: 'auto', opacity: 0.7 }}
+                        style={{ width: '60px', height: 'auto' }}
                     />
                 </div>
             ))}
