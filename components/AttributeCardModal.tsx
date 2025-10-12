@@ -255,14 +255,38 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                     <AttributeBar label="Aggressiveness" value={attributes.aggressiveness} />
                                     <AttributeBar label="Checking" value={attributes.checking} />
                                 </AttributeCategory>
-                                {!isGoalie && (
-                                    <AttributeCategory 
-                                        title="Misc"                            
-                                    >
-                                       <AttributeBar label="Fighting" value={fightingDisplayValue} />
-                                       <AttributeBar label="Pass/Shot Bias" value={attributes.roughness} />
-                                    </AttributeCategory>
-                                )}
+                                <AttributeCategory title="Misc">
+                                    <AttributeBar label="Fighting" value={fightingDisplayValue} />
+                                </AttributeCategory>
+                                <AttributeCategory 
+                                    title="Pass/Shot Bias"
+                                    value1={attributes.roughness}
+                                >
+                                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 pt-1">
+                                        <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Pass</span>
+                                        <div className="relative justify-self-center" style={{ width: '58px', height: '1rem' }}>
+                                            <div className="absolute inset-0 flex items-center justify-center gap-0.5">
+                                                {Array.from({ length: 6 }).map((_, i) => {
+                                                    const isSelected = (attributes.roughness - 1) === i;
+                                                    return (
+                                                        <div key={i} className={`w-2 h-2 rounded-sm ${isSelected ? 'bg-green-500' : 'bg-black/30'}`} />
+                                                    );
+                                                })}
+                                            </div>
+                                            {attributes.roughness >= 1 && attributes.roughness <= 6 && (
+                                                <div 
+                                                    className="absolute -top-0.5 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-white"
+                                                    style={{ 
+                                                        left: `${((attributes.roughness - 1) * 10) + 4}px`,
+                                                        transform: 'translateX(-50%)'
+                                                    }}
+                                                    title={`Pass/Shot Bias: ${attributes.roughness}`}
+                                                />
+                                            )}
+                                        </div>
+                                        <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Shot</span>
+                                    </div>
+                                </AttributeCategory>
                             </>
                         )}
                     </div>
