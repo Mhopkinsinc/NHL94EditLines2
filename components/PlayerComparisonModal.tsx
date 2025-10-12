@@ -153,6 +153,7 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
                     <h4 className="font-bold text-sky-400 text-center mb-1">Physical</h4>
                     <ComparisonRow label="Aggressiveness" value1={!p1IsGoalie ? p1.attributes.aggressiveness : '-'} numericValue1={!p1IsGoalie ? p1.attributes.aggressiveness : '-'} value2={!p2IsGoalie ? p2.attributes.aggressiveness : '-'} numericValue2={!p2IsGoalie ? p2.attributes.aggressiveness : '-'} />
                     <ComparisonRow label="Checking" value1={!p1IsGoalie ? p1.attributes.checking : '-'} numericValue1={!p1IsGoalie ? p1.attributes.checking : '-'} value2={!p2IsGoalie ? p2.attributes.checking : '-'} numericValue2={!p2IsGoalie ? p2.attributes.checking : '-'} />
+                    <ComparisonRow label="Endurance" value1={!p1IsGoalie ? p1.attributes.endurance : '-'} numericValue1={!p1IsGoalie ? p1.attributes.endurance : '-'} value2={!p2IsGoalie ? p2.attributes.endurance : '-'} numericValue2={!p2IsGoalie ? p2.attributes.endurance : '-'} />
                     <ComparisonRow label="Fighting" value1={!p1IsGoalie ? p1Fighting : '-'} numericValue1={!p1IsGoalie ? p1Fighting : '-'} value2={!p2IsGoalie ? p2Fighting : '-'} numericValue2={!p2IsGoalie ? p2Fighting : '-'} />
                     <ComparisonRow 
                         label="Weight" 

@@ -256,6 +256,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                     <AttributeBar label="Checking" value={attributes.checking} />
                                 </AttributeCategory>
                                 <AttributeCategory title="Misc">
+                                    <AttributeBar label="Endurance" value={attributes.endurance} />
                                     <AttributeBar label="Fighting" value={fightingDisplayValue} />
                                 </AttributeCategory>
                                 <AttributeCategory 
