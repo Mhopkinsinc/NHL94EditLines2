@@ -7,8 +7,7 @@ import { walesLogoDataUri } from "./WalesLogo";
 import { campbellLogoDataUri } from "./CampbellLogo";
 import { ducksLogoDataUri } from "./DucksLogo";
 
-const LOGO_SIZE = 60;
-const LOGO_RADIUS = LOGO_SIZE / 2;
+const LOGO_SIZE = 120; // Increased base size for all logos.
 
 interface LogoState {
   id: number;
@@ -20,17 +19,17 @@ interface LogoState {
   rotationSpeed: number;
   logoUri: string;
   opacity: number;
+  size: number;
+  radius: number;
 }
 
-// FIX: Moved constants outside of the component to prevent re-declaration on every render.
-// This can help avoid potential issues with closures inside the useEffect hook.
 const availableLogos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri, walesLogoDataUri, campbellLogoDataUri, ducksLogoDataUri];
 const totalLogos = availableLogos.length;
+
 
 export const WelcomeAnimation: React.FC = () => {
     const [logos, setLogos] = useState<LogoState[]>([]);
     const containerRef = useRef<HTMLDivElement>(null);
-    // FIX: Initialize useRef with null to provide an initial value, resolving the "Expected 1 arguments, but got 0" error.
     const animationFrameId = useRef<number | null>(null);
 
     useEffect(() => {
@@ -39,17 +38,25 @@ export const WelcomeAnimation: React.FC = () => {
 
         const { width, height } = container.getBoundingClientRect();
 
-        const createLogo = (id: number): LogoState => ({
-            id,
-            x: Math.random() * width,
-            y: height + Math.random() * height, // Start below the screen
-            vx: (Math.random() - 0.5) * 50, // Horizontal velocity
-            vy: -50 - Math.random() * 50,   // Upward velocity
-            rotation: Math.random() * 360,
-            rotationSpeed: (Math.random() - 0.5) * 30,
-            logoUri: availableLogos[id % availableLogos.length],
-            opacity: 0,
-        });
+        const createLogo = (id: number): LogoState => {
+            const logoUri = availableLogos[id % availableLogos.length];
+            const size = LOGO_SIZE; // All logos are now the same larger size.
+            const radius = size / 2;
+
+            return {
+                id,
+                x: Math.random() * width,
+                y: height + Math.random() * height, // Start below the screen
+                vx: (Math.random() - 0.5) * 50, // Horizontal velocity
+                vy: -50 - Math.random() * 50,   // Upward velocity
+                rotation: Math.random() * 360,
+                rotationSpeed: (Math.random() - 0.5) * 30,
+                logoUri,
+                opacity: 0,
+                size,
+                radius,
+            };
+        };
         
         const initialLogos = Array.from({ length: totalLogos }, (_, i) => createLogo(i));
         setLogos(initialLogos);
@@ -80,16 +87,16 @@ export const WelcomeAnimation: React.FC = () => {
                     if (logo.opacity > 1) logo.opacity = 1;
 
                     // Wall collisions
-                    if (logo.x < LOGO_RADIUS && logo.vx < 0) {
+                    if (logo.x < logo.radius && logo.vx < 0) {
                         logo.vx *= -1;
-                        logo.x = LOGO_RADIUS;
-                    } else if (logo.x > width - LOGO_RADIUS && logo.vx > 0) {
+                        logo.x = logo.radius;
+                    } else if (logo.x > width - logo.radius && logo.vx > 0) {
                         logo.vx *= -1;
-                        logo.x = width - LOGO_RADIUS;
+                        logo.x = width - logo.radius;
                     }
 
                     // If logo goes off the top, reset it at the bottom
-                    if (logo.y < -LOGO_SIZE) {
+                    if (logo.y < -logo.size) {
                         Object.assign(logo, createLogo(logo.id));
                     }
                 });
@@ -104,9 +111,9 @@ export const WelcomeAnimation: React.FC = () => {
                         const dy = logo2.y - logo1.y;
                         const distance = Math.sqrt(dx * dx + dy * dy);
 
-                        if (distance < LOGO_RADIUS * 2) {
+                        if (distance < logo1.radius + logo2.radius) {
                             // 1. Resolve overlap
-                            const overlap = (LOGO_RADIUS * 2 - distance) / 2;
+                            const overlap = (logo1.radius + logo2.radius - distance) / 2;
                             const nx = dx / distance; // Normalized collision axis x
                             const ny = dy / distance; // Normalized collision axis y
                             logo1.x -= overlap * nx;
@@ -159,9 +166,9 @@ export const WelcomeAnimation: React.FC = () => {
                         position: 'absolute',
                         top: 0,
                         left: 0,
-                        width: `${LOGO_SIZE}px`,
-                        height: `${LOGO_SIZE}px`,
-                        transform: `translate(${logo.x - LOGO_RADIUS}px, ${logo.y - LOGO_RADIUS}px) rotate(${logo.rotation}deg)`,
+                        width: `${logo.size}px`,
+                        height: `${logo.size}px`,
+                        transform: `translate(${logo.x - logo.radius}px, ${logo.y - logo.radius}px) rotate(${logo.rotation}deg)`,
                         opacity: logo.opacity,
                         willChange: 'transform, opacity',
                     }}
