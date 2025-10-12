@@ -3,6 +3,7 @@
 This file tracks upcoming tasks and feature requests for the application.
 
 ## Future Ideas
+- [ ] Player search against all teams, find player ability to switch to team
 - [ ] Add ability to edit player attributes directly from the attribute card modal.
 
 ## Done
