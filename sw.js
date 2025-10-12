@@ -1,9 +1,9 @@
 const CACHE_NAME = 'nhl94-line-editor-v1';
+const BASE_PATH = '/NHL94EditLines2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/index.tsx',
-  '/vite.svg',
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/index.html`,
+  `${BASE_PATH}/vite.svg`,
   'https://cdn.tailwindcss.com/',
   'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css',
 ];
