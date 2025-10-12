@@ -3,7 +3,7 @@ const BASE_PATH = '/NHL94EditLines2';
 const urlsToCache = [
   `${BASE_PATH}/`,
   `${BASE_PATH}/index.html`,
-  `${BASE_PATH}/vite.svg`,
+  `${BASE_PATH}/nhl94.svg`,
   'https://cdn.tailwindcss.com/',
   'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css',
 ];
