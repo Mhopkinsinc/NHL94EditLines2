@@ -14,6 +14,7 @@ import { RomInfoModal } from './components/RomInfoModal';
 import { HistoryModal } from './components/HistoryModal';
 import { AppInfoModal } from './components/AppInfoModal';
 import { PlayerComparisonModal } from './components/PlayerComparisonModal';
+import { WelcomeAnimation } from './components/WelcomeAnimation';
 
 type DragSource =
   | { type: 'FORWARD_LINE'; lineIndex: number; position: 'LW' | 'C' | 'RW' | 'EX' }
@@ -1025,9 +1026,10 @@ const App: React.FC = () => {
                   onDragLeave={handleDragLeave}
                   onDragOver={handleDragOver}
                   onDrop={handleDropOnWelcome}
-                  className={`relative text-center py-20 bg-[#2B3544] rounded-lg mt-4 transition-all duration-300 border-4 ${isDraggingOver ? 'border-dashed border-sky-400 scale-105 bg-sky-900/50' : 'border-transparent'}`}
+                  className={`relative text-center py-20 bg-[#2B3544] rounded-lg mt-4 transition-all duration-300 border-4 ${isDraggingOver ? 'border-dashed border-sky-400 scale-105 bg-sky-900/50' : 'border-transparent'} overflow-hidden`}
               >
-                  <div className={`transition-opacity duration-300 ${isDraggingOver ? 'opacity-0' : 'opacity-100'} flex flex-col items-center px-4`}>
+                  <WelcomeAnimation />
+                  <div className={`relative z-10 transition-opacity duration-300 ${isDraggingOver ? 'opacity-0' : 'opacity-100'} flex flex-col items-center px-4`}>
                       <h1 className="text-5xl font-extrabold text-sky-300 mb-4" style={{textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 10px rgba(125, 211, 252, 0.3)'}}> NHL 94 Line Editor </h1>
                       <UploadRomIcon className="w-16 h-16 text-gray-500 mb-4" />
                       <h2 className="text-3xl font-bold mb-2 animate-bounce">Upload your ROM file</h2>
@@ -1045,7 +1047,7 @@ const App: React.FC = () => {
                           Browse Files
                       </button>
                   </div>
-                   <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isDraggingOver ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} aria-hidden={!isDraggingOver}>
+                   <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isDraggingOver ? 'opacity-100' : 'opacity-0 pointer-events-none'} z-10`} aria-hidden={!isDraggingOver}>
                       <UploadIcon className="w-16 h-16 text-sky-400 mb-4" />
                       <p className="text-2xl font-bold text-sky-300">Drop ROM file to begin!</p>
                   </div>
