@@ -3,6 +3,8 @@ import { torontoLogoDataUri } from './TorontoLogo';
 import { nhlLogoDataUri } from './NhlLogo';
 import { chicagoLogoDataUri } from './ChicagoLogo';
 import { nhl94LogoDataUri } from "./NHL94Logo";
+import { walesLogoDataUri } from "./WalesLogo";
+import { campbellLogoDataUri } from "./CampbellLogo";
 
 const LOGO_SIZE = 60;
 const LOGO_RADIUS = LOGO_SIZE / 2;
@@ -21,7 +23,7 @@ interface LogoState {
 
 // FIX: Moved constants outside of the component to prevent re-declaration on every render.
 // This can help avoid potential issues with closures inside the useEffect hook.
-const availableLogos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri];
+const availableLogos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri, walesLogoDataUri, campbellLogoDataUri];
 const totalLogos = availableLogos.length;
 
 export const WelcomeAnimation: React.FC = () => {
