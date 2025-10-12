@@ -5,6 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>94' Line Editor</title>
+
+    <!-- PWA additions -->
+    <link rel="manifest" href="/NHL94EditLines2/assets/manifest-CAhtTGZT.json" />
+    <meta name="theme-color" content="#1A222C" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- End PWA additions -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css">
 
@@ -20,9 +28,24 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/NHL94EditLines2/assets/index-C0BUnQ9E.js"></script>
+  <script type="module" crossorigin src="/NHL94EditLines2/assets/index-Cj5Axp2_.js"></script>
 </head>
   <body class="bg-[#212934]">
-    <div id="root"></div>
+    <div id="root"></div>
+    
+    <!-- PWA additions -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, err => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
+      }
+    </script>
+    <!-- End PWA additions -->
+
   </body>
 </html>
