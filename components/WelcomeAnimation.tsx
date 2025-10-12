@@ -22,12 +22,13 @@ interface LogoState {
 // FIX: Moved constants outside of the component to prevent re-declaration on every render.
 // This can help avoid potential issues with closures inside the useEffect hook.
 const availableLogos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri];
-const totalLogos = 20;
+const totalLogos = availableLogos.length;
 
 export const WelcomeAnimation: React.FC = () => {
     const [logos, setLogos] = useState<LogoState[]>([]);
     const containerRef = useRef<HTMLDivElement>(null);
-    const animationFrameId = useRef<number>();
+    // FIX: Initialize useRef with null to provide an initial value, resolving the "Expected 1 arguments, but got 0" error.
+    const animationFrameId = useRef<number | null>(null);
 
     useEffect(() => {
         const container = containerRef.current;
