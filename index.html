@@ -2,12 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/nhl94.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>94' Line Editor</title>
 
     <!-- PWA additions -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/NHL94EditLines2/manifest.webmanifest" />
     <meta name="theme-color" content="#1A222C" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -35,7 +35,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(registration => {
+          navigator.serviceWorker.register('/NHL94EditLines2/sw.js').then(registration => {
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
           }, err => {
             console.log('ServiceWorker registration failed: ', err);
