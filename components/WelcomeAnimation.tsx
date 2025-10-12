@@ -1,92 +1,172 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { torontoLogoDataUri } from './TorontoLogo';
 import { nhlLogoDataUri } from './NhlLogo';
 import { chicagoLogoDataUri } from './ChicagoLogo';
 import { nhl94LogoDataUri } from "./NHL94Logo";
 
-interface StyleConfig {
+const LOGO_SIZE = 60;
+const LOGO_RADIUS = LOGO_SIZE / 2;
+
+interface LogoState {
   id: number;
-  left: string;
-  animationName: string;
-  animationDuration: string;
-  animationDelay: string;
-  transform: string;
-  zIndex: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  rotation: number;
+  rotationSpeed: number;
   logoUri: string;
+  opacity: number;
 }
 
+// FIX: Moved constants outside of the component to prevent re-declaration on every render.
+// This can help avoid potential issues with closures inside the useEffect hook.
+const availableLogos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri];
+const totalLogos = 20;
+
 export const WelcomeAnimation: React.FC = () => {
-    const [styles, setStyles] = useState<StyleConfig[]>([]);
-    const [keyframes, setKeyframes] = useState('');
-    const total = 20;
-    const logos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri];
+    const [logos, setLogos] = useState<LogoState[]>([]);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const animationFrameId = useRef<number>();
 
     useEffect(() => {
-        let keyframesString = '';
-        const generatedStyles: StyleConfig[] = [];
+        const container = containerRef.current;
+        if (!container) return;
 
-        for (let i = 1; i <= total; i++) {
-            const scale = Math.random() * 1.6 + 0.4;
-            const initialRotate = Math.random() * 360;
-            const endRotate = Math.random() * 360;
+        const { width, height } = container.getBoundingClientRect();
 
-            keyframesString += `
-                @keyframes raise${i} {
-                    to {
-                        bottom: 150vh;
-                        transform: scale(${scale}) rotate(${endRotate}deg);
+        const createLogo = (id: number): LogoState => ({
+            id,
+            x: Math.random() * width,
+            y: height + Math.random() * height, // Start below the screen
+            vx: (Math.random() - 0.5) * 50, // Horizontal velocity
+            vy: -50 - Math.random() * 50,   // Upward velocity
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 30,
+            logoUri: availableLogos[id % availableLogos.length],
+            opacity: 0,
+        });
+        
+        const initialLogos = Array.from({ length: totalLogos }, (_, i) => createLogo(i));
+        setLogos(initialLogos);
+        
+        let lastTime = 0;
+        const animate = (timestamp: number) => {
+            if (!lastTime) {
+                lastTime = timestamp;
+                animationFrameId.current = requestAnimationFrame(animate);
+                return;
+            }
+            const dt = (timestamp - lastTime) / 1000; // time delta in seconds
+            lastTime = timestamp;
+
+            setLogos(prevLogos => {
+                const newLogos = prevLogos.map(logo => ({ ...logo }));
+
+                // Update positions and handle wall collisions
+                newLogos.forEach(logo => {
+                    logo.x += logo.vx * dt;
+                    logo.y += logo.vy * dt;
+                    logo.rotation += logo.rotationSpeed * dt;
+
+                    // Fade in
+                    if (logo.opacity < 1) {
+                        logo.opacity += 2 * dt;
+                    }
+                    if (logo.opacity > 1) logo.opacity = 1;
+
+                    // Wall collisions
+                    if (logo.x < LOGO_RADIUS && logo.vx < 0) {
+                        logo.vx *= -1;
+                        logo.x = LOGO_RADIUS;
+                    } else if (logo.x > width - LOGO_RADIUS && logo.vx > 0) {
+                        logo.vx *= -1;
+                        logo.x = width - LOGO_RADIUS;
+                    }
+
+                    // If logo goes off the top, reset it at the bottom
+                    if (logo.y < -LOGO_SIZE) {
+                        Object.assign(logo, createLogo(logo.id));
+                    }
+                });
+
+                // Handle inter-logo collisions
+                for (let i = 0; i < newLogos.length; i++) {
+                    for (let j = i + 1; j < newLogos.length; j++) {
+                        const logo1 = newLogos[i];
+                        const logo2 = newLogos[j];
+
+                        const dx = logo2.x - logo1.x;
+                        const dy = logo2.y - logo1.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < LOGO_RADIUS * 2) {
+                            // 1. Resolve overlap
+                            const overlap = (LOGO_RADIUS * 2 - distance) / 2;
+                            const nx = dx / distance; // Normalized collision axis x
+                            const ny = dy / distance; // Normalized collision axis y
+                            logo1.x -= overlap * nx;
+                            logo1.y -= overlap * ny;
+                            logo2.x += overlap * nx;
+                            logo2.y += overlap * ny;
+
+                            // 2. Elastic collision response
+                            const tx = -ny; // Tangent x
+                            const ty = nx;  // Tangent y
+
+                            const v1n = logo1.vx * nx + logo1.vy * ny; // velocity along normal
+                            const v1t = logo1.vx * tx + logo1.vy * ty; // velocity along tangent
+                            const v2n = logo2.vx * nx + logo2.vy * ny;
+                            const v2t = logo2.vx * tx + logo2.vy * ty;
+
+                            // Swap normal velocities (for equal mass objects)
+                            const v1n_new = v2n;
+                            const v2n_new = v1n;
+
+                            // Convert back to cartesian coordinates and update velocities
+                            logo1.vx = v1n_new * nx + v1t * tx;
+                            logo1.vy = v1n_new * ny + v1t * ty;
+                            logo2.vx = v2n_new * nx + v2t * tx;
+                            logo2.vy = v2n_new * ny + v2t * ty;
+                        }
                     }
                 }
-                @keyframes fade${i} {
-                    0% { opacity: 0; }
-                    10% { opacity: 0.7; }
-                    90% { opacity: 0.7; }
-                    100% { opacity: 0; }
-                }
-            `;
-
-            generatedStyles.push({
-                id: i,
-                left: `${Math.random() * 120 - 20}%`,
-                animationName: `raise${i}, fade${i}`,
-                animationDuration: `${6 + Math.random() * 15}s`,
-                animationDelay: `${Math.random() * 5 - 5}s`,
-                transform: `scale(${scale}) rotate(${initialRotate}deg)`,
-                zIndex: i - 7,
-                logoUri: logos[(i - 1) % logos.length],
+                return newLogos;
             });
-        }
 
-        setKeyframes(keyframesString);
-        setStyles(generatedStyles);
+            animationFrameId.current = requestAnimationFrame(animate);
+        };
+
+        animationFrameId.current = requestAnimationFrame(animate);
+        
+        return () => {
+            if (animationFrameId.current) {
+                cancelAnimationFrame(animationFrameId.current);
+            }
+        };
     }, []);
 
     return (
-        <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
-            <style>{keyframes}</style>
-            {styles.map(style => (
+        <div ref={containerRef} className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
+            {logos.map(logo => (
                 <div
-                    key={style.id}
-                    className="logo-floater"
+                    key={logo.id}
                     style={{
-                        left: style.left,
-                        animationName: style.animationName,
-                        animationDuration: style.animationDuration,
-                        animationDelay: style.animationDelay,
-                        transform: style.transform,
-                        zIndex: style.zIndex,
                         position: 'absolute',
-                        bottom: '-100vh',
-                        transformStyle: 'preserve-3d',
-                        animationTimingFunction: 'linear',
-                        animationIterationCount: 'infinite',
+                        top: 0,
+                        left: 0,
+                        width: `${LOGO_SIZE}px`,
+                        height: `${LOGO_SIZE}px`,
+                        transform: `translate(${logo.x - LOGO_RADIUS}px, ${logo.y - LOGO_RADIUS}px) rotate(${logo.rotation}deg)`,
+                        opacity: logo.opacity,
+                        willChange: 'transform, opacity',
                     }}
                 >
                     <img 
-                        src={style.logoUri} 
+                        src={logo.logoUri} 
                         alt="" 
                         role="presentation"
-                        style={{ width: '60px', height: 'auto' }}
+                        style={{ width: '100%', height: 'auto' }}
                     />
                 </div>
             ))}
