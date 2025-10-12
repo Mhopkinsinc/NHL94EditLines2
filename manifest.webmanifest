@@ -7,24 +7,16 @@
   "display": "standalone",
   "background_color": "#212934",
   "theme_color": "#1A222C",
-  "icons": [    
-    {
-      "src": "/NHL94EditLines2/nhl94.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
+  "icons": [   
        {
       "src": "NHL94EditLines2/web-app-manifest-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"      
     },
     {
       "src": "NHL94EditLines2/web-app-manifest-512x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"      
     }
   ]
 }
