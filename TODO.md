@@ -3,6 +3,7 @@
 This file tracks upcoming tasks and feature requests for the application.
 
 ## Future Ideas
+- [ ] Add ? Icon for help that will have a list of feautes that when clicked will launch driver.js and show a hilight with pop over on the feature.
 - [ ] Player search against all teams, find player ability to switch to team
 - [ ] Add ability to edit player attributes directly from the attribute card modal.
 
