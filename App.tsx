@@ -1026,26 +1026,28 @@ const App: React.FC = () => {
                   onDragLeave={handleDragLeave}
                   onDragOver={handleDragOver}
                   onDrop={handleDropOnWelcome}
-                  className={`relative text-center py-20 bg-[#2B3544] rounded-lg mt-4 transition-all duration-300 border-4 ${isDraggingOver ? 'border-dashed border-sky-400 scale-105 bg-sky-900/50' : 'border-transparent'} overflow-hidden`}
+                  className={`relative flex items-center justify-center py-20 bg-[#2B3544] rounded-lg mt-4 transition-all duration-300 border-4 ${isDraggingOver ? 'border-dashed border-sky-400 scale-105 bg-sky-900/50' : 'border-transparent'} overflow-hidden`}
               >
                   <WelcomeAnimation />
-                  <div className={`relative z-10 transition-opacity duration-300 ${isDraggingOver ? 'opacity-0' : 'opacity-100'} flex flex-col items-center px-4`}>
-                      <h1 className="text-5xl font-extrabold text-sky-300 mb-4" style={{textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 10px rgba(125, 211, 252, 0.3)'}}> NHL 94 Line Editor </h1>
-                      <UploadRomIcon className="w-16 h-16 text-gray-500 mb-4" />
-                      <h2 className="text-3xl font-bold mb-2 animate-bounce">Upload your ROM file</h2>
-                      <p className="text-gray-400 mb-6">
-                          Drag & drop a 
-                          <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.bin</code>, 
-                          <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.md</code>, or 
-                          <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.gen</code> file here
-                      </p>
-                      <p className="text-gray-500 mb-4">or</p>
-                      <button
-                          onClick={handleUploadClick}
-                          className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-6 rounded-md transition-colors"
-                      >
-                          Browse Files
-                      </button>
+                  <div className={`relative z-10 transition-opacity duration-300 ${isDraggingOver ? 'opacity-0' : 'opacity-100'}`}>
+                      <div className="bg-black/40 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-sky-500/20 flex flex-col items-center text-center">
+                          <h1 className="text-5xl font-extrabold text-sky-300 mb-4" style={{textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 10px rgba(125, 211, 252, 0.3)'}}> NHL 94 Line Editor </h1>
+                          <UploadRomIcon className="w-16 h-16 text-gray-500 mb-4" />
+                          <h2 className="text-3xl font-bold mb-2 animate-bounce">Upload your ROM file</h2>
+                          <p className="text-gray-400 mb-6">
+                              Drag & drop a 
+                              <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.bin</code>, 
+                              <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.md</code>, or 
+                              <code className="bg-[#394559] text-gray-300 rounded px-1.5 py-0.5 mx-1 font-mono text-sm not-italic">.gen</code> file here
+                          </p>
+                          <p className="text-gray-500 mb-4">or</p>
+                          <button
+                              onClick={handleUploadClick}
+                              className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-6 rounded-md transition-colors"
+                          >
+                              Browse Files
+                          </button>
+                      </div>
                   </div>
                    <div className={`absolute inset-0 flex flex-col justify-center items-center transition-opacity duration-300 ${isDraggingOver ? 'opacity-100' : 'opacity-0 pointer-events-none'} z-10`} aria-hidden={!isDraggingOver}>
                       <UploadIcon className="w-16 h-16 text-sky-400 mb-4" />
