@@ -272,6 +272,13 @@ const App: React.FC = () => {
                     } 
                 },
                 { 
+                    element: '#tour-step-view-line', 
+                    popover: { 
+                        title: 'Filter by Line', 
+                        description: 'You can filter the view to focus on a specific line. This is helpful for managing power plays, penalty kills, etc.' 
+                    } 
+                },
+                { 
                     element: '#tour-step-6', 
                     popover: { 
                         title: 'Player Options Menu', 
@@ -1049,13 +1056,13 @@ const App: React.FC = () => {
               <div id="tour-step-5" className="bg-[#2B3544] p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold">Lineup</h2>
-                    <div className="flex items-center">
+                    <div id="tour-step-view-line" className="flex items-center">
                         <label htmlFor="line-selector" className="mr-3 text-sm font-medium text-gray-300 select-none">View Line</label>
                         <select
                             id="line-selector"
                             value={selectedLine}
                             onChange={(e) => setSelectedLine(e.target.value)}
-                            className="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-32 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-32 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={!romInfo}
                         >
                             <option value="All">All Lines</option>
