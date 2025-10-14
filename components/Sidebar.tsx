@@ -21,7 +21,7 @@ interface SidebarProps {
 // This component provides navigation for different views of the application.
 const navItems = [
     { id: 'roster-editor', label: 'Line Editor', icon: PencilIcon },
-    { id: 'player-stats', label: 'Player Stats', icon: ChartBarIcon },    
+    { id: 'player-stats', label: 'Player Data', icon: ChartBarIcon },    
     { id: 'settings', label: 'Settings', icon: Cog6ToothIcon },
     { id: 'help', label: 'Help', icon: QuestionMarkCircleIcon },
 ];
