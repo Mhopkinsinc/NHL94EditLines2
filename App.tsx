@@ -930,95 +930,96 @@ const App: React.FC = () => {
 
       <div className="p-4 md:p-8">
         <main className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center">
-            {/* Controls Row */}
-            <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-              Team
-            </div>
-            
-            <div id="tour-step-1">
-              <TeamSelector 
-                teams={availableTeams} 
-                selectedTeamName={selectedTeamName} 
-                onTeamChange={handleTeamChange}
-                disabled={!romInfo}
-              />
-            </div>
-
-            <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end gap-6">
-              <div className="flex items-center">
-                  <label htmlFor="line-selector" className="mr-3 text-sm font-medium text-gray-300 select-none">View Line</label>
-                  <select
-                      id="line-selector"
-                      value={selectedLine}
-                      onChange={(e) => setSelectedLine(e.target.value)}
-                      className="bg-[#2B3544] border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-32 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={!romInfo}
-                  >
-                      <option value="All">All Lines</option>
-                      {forwardLineLabels.map(label => (
-                          <option key={label} value={label}>{label}</option>
-                      ))}
-                  </select>
+          {/* The input element must be present for the "Browse Files" button to work */}
+          <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept=".bin,.md,.gen"
+              aria-hidden="true"
+          />
+          {romInfo && (
+            <div className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center">
+              {/* Controls Row */}
+              <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
+                Team
               </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept=".bin,.md,.gen"
-                    aria-hidden="true"
+              
+              <div id="tour-step-1">
+                <TeamSelector 
+                  teams={availableTeams} 
+                  selectedTeamName={selectedTeamName} 
+                  onTeamChange={handleTeamChange}
+                  disabled={!romInfo}
                 />
-                <button
-                    id="tour-step-2"
-                    onClick={() => handleSaveChanges()}
-                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5"
-                    disabled={!isDirty}
-                    title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
-                >
-                    <SaveIcon className="w-4 h-4" />
-                    Save ROM
-                </button>
-                {romInfo && (
-                    <>
-                        <button
-                            id="tour-step-4"
-                            onClick={handleOpenRomInfoModal}
-                            className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
-                            aria-label="Show ROM Information"
-                            title="Click this icon to view detailed information about the loaded ROM"
-                        >
-                            <EASportsLogo className="w-5 h-5" />
-                        </button>
-                        <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
-                             <button
-                                id="tour-step-3"
-                                onClick={handleOpenHistoryModal}
-                                className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
-                                aria-label="Show Change History"
-                                disabled={historyLog.length === 0}
-                                title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
-                            >
-                                <HistoryIcon className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={handleResetApp}
-                                className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
-                                aria-label="Unload ROM and start over"
-                                title="Unload ROM and start over"
-                            >
-                                <ResetIcon className="w-5 h-5 text-red-500" />
-                            </button>
-                        </div>
-                    </>
-                )}
               </div>
+
+              <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end gap-6">
+                <div className="flex items-center">
+                    <label htmlFor="line-selector" className="mr-3 text-sm font-medium text-gray-300 select-none">View Line</label>
+                    <select
+                        id="line-selector"
+                        value={selectedLine}
+                        onChange={(e) => setSelectedLine(e.target.value)}
+                        className="bg-[#2B3544] border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-32 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!romInfo}
+                    >
+                        <option value="All">All Lines</option>
+                        {forwardLineLabels.map(label => (
+                            <option key={label} value={label}>{label}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                      id="tour-step-2"
+                      onClick={() => handleSaveChanges()}
+                      className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5"
+                      disabled={!isDirty}
+                      title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
+                  >
+                      <SaveIcon className="w-4 h-4" />
+                      Save ROM
+                  </button>
+                  <>
+                      <button
+                          id="tour-step-4"
+                          onClick={handleOpenRomInfoModal}
+                          className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
+                          aria-label="Show ROM Information"
+                          title="Click this icon to view detailed information about the loaded ROM"
+                      >
+                          <EASportsLogo className="w-5 h-5" />
+                      </button>
+                      <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
+                            <button
+                              id="tour-step-3"
+                              onClick={handleOpenHistoryModal}
+                              className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
+                              aria-label="Show Change History"
+                              disabled={historyLog.length === 0}
+                              title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
+                          >
+                              <HistoryIcon className="w-5 h-5" />
+                          </button>
+                          <button
+                              onClick={handleResetApp}
+                              className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
+                              aria-label="Unload ROM and start over"
+                              title="Unload ROM and start over"
+                          >
+                              <ResetIcon className="w-5 h-5 text-red-500" />
+                          </button>
+                      </div>
+                  </>
+                </div>
+              </div>
+              
+              <div className="col-span-full h-2" />
             </div>
-            
-            <div className="col-span-full h-2" />
-          </div>
+          )}
           
           {!romInfo ? (
               <div 
