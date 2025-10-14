@@ -13,23 +13,30 @@ export const calculateSkaterOverall = (player: Player): number => {
     passacc,
     stickhand,
     checking,
+    endurance,
   } = player.attributes;
 
-  const sum =
-    agility +
-    speed +
-    oawareness +
-    dawareness +
-    shtpower +
-    shtacc +
-    passacc +
-    stickhand +
-    checking;
-  
-  // Max possible sum is 9 attributes * 6 max value = 54
-  const maxSum = 54;
-  
-  const overall = Math.round((sum / maxSum) * 100);
-  
-  return Math.min(100, overall);
+  const total =
+    (agility * 2) +
+    (speed * 3) +
+    (oawareness * 3) +
+    (dawareness * 2) +
+    (shtpower * 1) +
+    (checking * 2) +
+    (stickhand * 3) +
+    (shtacc * 2) +
+    (endurance * 1) +
+    (passacc * 1);
+
+  let overall: number;
+
+  if (total < 50) {
+    overall = Math.round(total / 2) + 25;
+  } else if (total > 99) {
+    overall = 99;
+  } else {
+    overall = total;
+  }
+
+  return overall;
 };

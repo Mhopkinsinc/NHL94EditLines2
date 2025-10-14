@@ -11,6 +11,7 @@ interface PlayerDataGridProps {
 interface SkaterData extends Player {
     overall: number;
     teamAbv: string;
+    position: 'F' | 'D';
 }
 
 type SortableKeys = keyof Omit<SkaterData, 'attributes' | 'id' | 'statusIcon' | 'role'> | keyof SkaterData['attributes'];
@@ -34,6 +35,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                         ...player,
                         overall: calculateSkaterOverall(player),
                         teamAbv: team.abv,
+                        position: player.role === 'Forward' ? 'F' : 'D',
                     }))
             );
         
@@ -51,7 +53,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
             let aValue: any;
             let bValue: any;
 
-            const topLevelKeys: (keyof SkaterData)[] = ['name', 'overall', 'teamAbv'];
+            const topLevelKeys: (keyof SkaterData)[] = ['name', 'overall', 'teamAbv', 'position'];
 
             if (topLevelKeys.includes(key as keyof SkaterData)) {
                 aValue = a[key as keyof SkaterData];
@@ -102,7 +104,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
             if (current.key === key) {
                 return { key, direction: current.direction === 'asc' ? 'desc' : 'asc' };
             }
-            const ascDefaults: SortableKeys[] = ['name', 'teamAbv', 'handed'];
+            const ascDefaults: SortableKeys[] = ['name', 'teamAbv', 'handed', 'position'];
             return { key, direction: ascDefaults.includes(key) ? 'asc' : 'desc' };
         });
     };
@@ -110,6 +112,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
     const headerGroups = [
         { label: 'Name', key: 'name' as SortableKeys, color: 'bg-slate-700' },
         { label: 'Team', key: 'teamAbv' as SortableKeys, color: 'bg-slate-700' },
+        { label: 'Pos', key: 'position' as SortableKeys, color: 'bg-slate-700' },
         { label: 'Handed', key: 'handed' as SortableKeys, color: 'bg-slate-700' },
         { label: 'Overall', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100' },
         { label: 'Weight', key: 'weight' as SortableKeys, color: 'bg-slate-800' },
@@ -125,12 +128,12 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
     ];
     
     const getCellColor = (index: number): string => {
-        if (index <= 2) return 'bg-slate-700/50';
-        if (index === 3) return 'bg-sky-900/50';
-        if (index <= 5) return 'bg-slate-800/50';
-        if (index <= 7) return 'bg-red-900/30';
-        if (index <= 9) return 'bg-green-900/30';
-        if (index <= 11) return 'bg-purple-900/30';
+        if (index <= 3) return 'bg-slate-700/50';
+        if (index === 4) return 'bg-sky-900/50';
+        if (index <= 6) return 'bg-slate-800/50';
+        if (index <= 8) return 'bg-red-900/30';
+        if (index <= 10) return 'bg-green-900/30';
+        if (index <= 12) return 'bg-purple-900/30';
         return 'bg-sky-900/30';
     };
 
@@ -183,18 +186,19 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                                 <tr key={player.id} className="hover:bg-gray-800/50">
                                     <td className={`px-3 py-2 whitespace-nowrap font-medium text-white ${getCellColor(0)}`}>{player.name}</td>
                                     <td className={`px-3 py-2 whitespace-nowrap text-gray-400 text-center ${getCellColor(1)}`}>{player.teamAbv}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-gray-300 ${getCellColor(2)}`}>{player.attributes.handed === 0 ? 'Lefty' : 'Righty'}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center font-bold text-white ${getCellColor(3)}`}>{player.overall}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(4)}`}>{player.attributes.weight}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(5)}`}>{player.attributes.checking}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(6)}`}>{player.attributes.shtpower}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(7)}`}>{player.attributes.shtacc}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(8)}`}>{player.attributes.speed}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(9)}`}>{player.attributes.agility}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(10)}`}>{player.attributes.stickhand}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(11)}`}>{player.attributes.passacc}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(12)}`}>{player.attributes.oawareness}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(13)}`}>{player.attributes.dawareness}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-gray-300 text-center ${getCellColor(2)}`}>{player.position}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-gray-300 ${getCellColor(3)}`}>{player.attributes.handed === 0 ? 'Lefty' : 'Righty'}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center font-bold text-white ${getCellColor(4)}`}>{player.overall}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(5)}`}>{player.attributes.weight}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(6)}`}>{player.attributes.checking}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(7)}`}>{player.attributes.shtpower}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(8)}`}>{player.attributes.shtacc}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(9)}`}>{player.attributes.speed}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(10)}`}>{player.attributes.agility}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(11)}`}>{player.attributes.stickhand}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(12)}`}>{player.attributes.passacc}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(13)}`}>{player.attributes.oawareness}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(14)}`}>{player.attributes.dawareness}</td>
                                 </tr>
                             ))}
                         </tbody>
