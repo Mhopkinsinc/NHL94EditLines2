@@ -955,23 +955,7 @@ const App: React.FC = () => {
                 />
               </div>
 
-              <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end gap-6">
-                <div className="flex items-center">
-                    <label htmlFor="line-selector" className="mr-3 text-sm font-medium text-gray-300 select-none">View Line</label>
-                    <select
-                        id="line-selector"
-                        value={selectedLine}
-                        onChange={(e) => setSelectedLine(e.target.value)}
-                        className="bg-[#2B3544] border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-32 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!romInfo}
-                    >
-                        <option value="All">All Lines</option>
-                        {forwardLineLabels.map(label => (
-                            <option key={label} value={label}>{label}</option>
-                        ))}
-                    </select>
-                </div>
-
+              <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end">
                 <div className="flex items-center gap-2">
                   <button
                       id="tour-step-2"
@@ -1062,108 +1046,128 @@ const App: React.FC = () => {
               </div>
           ) : (
             <>
-              <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center" id="tour-step-5">
-                {/* Forwards Headers */}
-                <div />
-                <h5 className="font-semibold text-center text-gray-300 text-sm">Left Wing</h5>
-                <h5 className="font-semibold text-center text-gray-300 text-sm">Center</h5>
-                <h5 className="font-semibold text-center text-gray-300 text-sm">Right Wing</h5>
-                <h5 className="font-semibold text-center text-gray-300 text-sm">Extra Attacker</h5>
+              <div id="tour-step-5" className="bg-[#2B3544] p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold">Lineup</h2>
+                    <div className="flex items-center">
+                        <label htmlFor="line-selector" className="mr-3 text-sm font-medium text-gray-300 select-none">View Line</label>
+                        <select
+                            id="line-selector"
+                            value={selectedLine}
+                            onChange={(e) => setSelectedLine(e.target.value)}
+                            className="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-32 p-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!romInfo}
+                        >
+                            <option value="All">All Lines</option>
+                            {forwardLineLabels.map(label => (
+                                <option key={label} value={label}>{label}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center">
+                  {/* Forwards Headers */}
+                  <div />
+                  <h5 className="font-semibold text-center text-gray-300 text-sm">Left Wing</h5>
+                  <h5 className="font-semibold text-center text-gray-300 text-sm">Center</h5>
+                  <h5 className="font-semibold text-center text-gray-300 text-sm">Right Wing</h5>
+                  <h5 className="font-semibold text-center text-gray-300 text-sm">Extra Attacker</h5>
 
-                {/* Forward Lines */}
-                {lineup.forwardLines.map((forwardLine, lineIndex) => {
-                  const lineLabel = forwardLineLabels[lineIndex];
-                  if (selectedLine !== 'All' && selectedLine !== lineLabel) {
-                      return null;
-                  }
-                  return (
-                      <React.Fragment key={`fwd-line-${lineIndex}`}>
-                        <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-                          {lineLabel}
-                        </div>
-                        {forwardPositions.map((position) => {
-                          const menuId = `fwd-${lineIndex}-${position}`;
-                          const isTourStepTarget = lineIndex === 0 && position === 'LW';
-                          return (
-                            <PositionSlot
-                              key={`${lineIndex}-${position}`}
-                              index={lineIndex}
-                              positionType={position}
-                              player={forwardLine[position]}
-                              onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'FORWARD_LINE', lineIndex: idx, position: pos as 'LW'|'C'|'RW'|'EX' })}
-                              onDrop={(idx, pos) => handleDrop({ type: 'FORWARD_LINE', lineIndex: idx, position: pos as 'LW'|'C'|'RW'|'EX' })}
-                              onRemove={(idx, pos) => handleRemovePlayer('forward', idx, pos)}
-                              onEmptyClick={() => handleOpenPlayerSelection('forward', lineIndex, position)}
-                              onViewAttributes={handleOpenAttributeModal}
-                              onCompare={handleComparisonSelect}
-                              isDragSource={getIsDragSource('FORWARD_LINE', lineIndex, position)}
-                              draggedPlayer={draggedItem?.player}
-                              menuId={menuId}
-                              isMenuOpen={openMenuId === menuId}
-                              onToggleMenu={handleToggleMenu}
-                              onCloseMenu={handleCloseMenus}
-                              selectedTeamName={selectedTeamName}
-                              isTourStep={isTourStepTarget && !!forwardLine[position]}
-                              isComparisonMode={isComparisonMode}
-                              firstComparisonPlayer={firstPlayerForComparison}
-                            />
-                          );
-                        })}
-                      </React.Fragment>
-                  )
-                })}
-                
-                {/* Spacer */}
-                <div className="h-4 col-span-5" />
-
-                {/* Defense Headers */}
-                <div />
-                <h5 className="font-semibold text-center text-gray-300 text-sm">Left Defense</h5>
-                <h5 className="font-semibold text-center text-gray-300 text-sm">Right Defense</h5>
-                <h5 className="font-semibold text-center text-gray-300 text-sm">Goalie</h5>
-                <div />
-
-                {/* Defense Pairings */}
-                {lineup.defensePairings.map((defensePair, pairIndex) => {
-                   const lineLabel = defensePairingLabels[pairIndex];
-                   if (selectedLine !== 'All' && selectedLine !== lineLabel) {
-                       return null;
-                   }
-                  return (
-                      <React.Fragment key={`def-pair-${pairIndex}`}>
+                  {/* Forward Lines */}
+                  {lineup.forwardLines.map((forwardLine, lineIndex) => {
+                    const lineLabel = forwardLineLabels[lineIndex];
+                    if (selectedLine !== 'All' && selectedLine !== lineLabel) {
+                        return null;
+                    }
+                    return (
+                        <React.Fragment key={`fwd-line-${lineIndex}`}>
                           <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-                          {lineLabel}
+                            {lineLabel}
                           </div>
-                          {defensePositions.map((position) => {
-                            const menuId = `def-${pairIndex}-${position}`;
+                          {forwardPositions.map((position) => {
+                            const menuId = `fwd-${lineIndex}-${position}`;
+                            const isTourStepTarget = lineIndex === 0 && position === 'LW';
                             return (
                               <PositionSlot
-                                  key={`${pairIndex}-${position}`}
-                                  index={pairIndex}
-                                  positionType={position}
-                                  player={defensePair[position]}
-                                  onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
-                                  onDrop={(idx, pos) => handleDrop({ type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
-                                  onRemove={(idx, pos) => handleRemovePlayer('defense', pairIndex, pos)}
-                                  onEmptyClick={() => handleOpenPlayerSelection('defense', pairIndex, position)}
-                                  onViewAttributes={handleOpenAttributeModal}
-                                  onCompare={handleComparisonSelect}
-                                  isDragSource={getIsDragSource('DEFENSE_PAIRING', pairIndex, position)}
-                                  draggedPlayer={draggedItem?.player}
-                                  menuId={menuId}
-                                  isMenuOpen={openMenuId === menuId}
-                                  onToggleMenu={handleToggleMenu}
-                                  onCloseMenu={handleCloseMenus}
-                                  selectedTeamName={selectedTeamName}
-                                  isComparisonMode={isComparisonMode}
-                                  firstComparisonPlayer={firstPlayerForComparison}
+                                key={`${lineIndex}-${position}`}
+                                index={lineIndex}
+                                positionType={position}
+                                player={forwardLine[position]}
+                                onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'FORWARD_LINE', lineIndex: idx, position: pos as 'LW'|'C'|'RW'|'EX' })}
+                                onDrop={(idx, pos) => handleDrop({ type: 'FORWARD_LINE', lineIndex: idx, position: pos as 'LW'|'C'|'RW'|'EX' })}
+                                onRemove={(idx, pos) => handleRemovePlayer('forward', idx, pos)}
+                                onEmptyClick={() => handleOpenPlayerSelection('forward', lineIndex, position)}
+                                onViewAttributes={handleOpenAttributeModal}
+                                onCompare={handleComparisonSelect}
+                                isDragSource={getIsDragSource('FORWARD_LINE', lineIndex, position)}
+                                draggedPlayer={draggedItem?.player}
+                                menuId={menuId}
+                                isMenuOpen={openMenuId === menuId}
+                                onToggleMenu={handleToggleMenu}
+                                onCloseMenu={handleCloseMenus}
+                                selectedTeamName={selectedTeamName}
+                                isTourStep={isTourStepTarget && !!forwardLine[position]}
+                                isComparisonMode={isComparisonMode}
+                                firstComparisonPlayer={firstPlayerForComparison}
                               />
                             );
                           })}
-                          <div />
-                      </React.Fragment>
-                  )
-                })}
+                        </React.Fragment>
+                    )
+                  })}
+                  
+                  {/* Spacer */}
+                  <div className="h-4 col-span-5" />
+
+                  {/* Defense Headers */}
+                  <div />
+                  <h5 className="font-semibold text-center text-gray-300 text-sm">Left Defense</h5>
+                  <h5 className="font-semibold text-center text-gray-300 text-sm">Right Defense</h5>
+                  <h5 className="font-semibold text-center text-gray-300 text-sm">Goalie</h5>
+                  <div />
+
+                  {/* Defense Pairings */}
+                  {lineup.defensePairings.map((defensePair, pairIndex) => {
+                     const lineLabel = defensePairingLabels[pairIndex];
+                     if (selectedLine !== 'All' && selectedLine !== lineLabel) {
+                         return null;
+                     }
+                    return (
+                        <React.Fragment key={`def-pair-${pairIndex}`}>
+                            <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
+                            {lineLabel}
+                            </div>
+                            {defensePositions.map((position) => {
+                              const menuId = `def-${pairIndex}-${position}`;
+                              return (
+                                <PositionSlot
+                                    key={`${pairIndex}-${position}`}
+                                    index={pairIndex}
+                                    positionType={position}
+                                    player={defensePair[position]}
+                                    onDragStart={(player, idx, pos) => handleDragStart(player, { type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
+                                    onDrop={(idx, pos) => handleDrop({ type: 'DEFENSE_PAIRING', pairIndex: idx, position: pos as 'LD'|'RD'|'G' })}
+                                    onRemove={(idx, pos) => handleRemovePlayer('defense', pairIndex, pos)}
+                                    onEmptyClick={() => handleOpenPlayerSelection('defense', pairIndex, position)}
+                                    onViewAttributes={handleOpenAttributeModal}
+                                    onCompare={handleComparisonSelect}
+                                    isDragSource={getIsDragSource('DEFENSE_PAIRING', pairIndex, position)}
+                                    draggedPlayer={draggedItem?.player}
+                                    menuId={menuId}
+                                    isMenuOpen={openMenuId === menuId}
+                                    onToggleMenu={handleToggleMenu}
+                                    onCloseMenu={handleCloseMenus}
+                                    selectedTeamName={selectedTeamName}
+                                    isComparisonMode={isComparisonMode}
+                                    firstComparisonPlayer={firstPlayerForComparison}
+                                />
+                              );
+                            })}
+                            <div />
+                        </React.Fragment>
+                    )
+                  })}
+                </div>
               </div>
 
               <div>
