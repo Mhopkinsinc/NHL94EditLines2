@@ -40,3 +40,28 @@ export const calculateSkaterOverall = (player: Player): number => {
 
   return overall;
 };
+
+export const calculateGoalieOverall = (player: Player): number => {
+  if (player.role !== 'Goalie') return 0;
+
+  const {
+    agility,
+    dawareness,
+    shtpower, // Puck Control
+    roughness, // Stick Left
+    endurance, // Stick Right
+    aggressiveness, // Glove Left
+    passacc, // Glove Right
+  } = player.attributes;
+
+  const total =
+    Math.floor(agility * 4.5) +
+    Math.floor(dawareness * 4.5) +
+    Math.floor(shtpower * 4.5) +
+    (roughness * 1) +
+    (endurance * 1) +
+    (aggressiveness * 1) +
+    (passacc * 1);
+  
+  return total > 99 ? 99 : total;
+};
