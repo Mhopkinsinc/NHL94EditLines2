@@ -189,14 +189,14 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
             </div>
             <div className="border border-gray-700 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full divide-y divide-gray-700 text-sm table-fixed">
+                    <table className="w-full divide-y divide-gray-700 text-sm">
                         <thead className="bg-gray-800">
                             <tr>
-                                {headerGroups.map((header, index) => (
+                                {headerGroups.map((header) => (
                                     <th
                                         key={header.key}
                                         scope="col"
-                                        className={`px-2 py-2 text-left text-xs font-bold text-gray-300 uppercase tracking-wider ${header.color} ${index === 0 ? 'w-48' : ''}`}
+                                        className={`px-2 py-2 text-left text-xs font-bold text-gray-300 uppercase tracking-wider ${header.color}`}
                                     >
                                         <button onClick={() => handleSort(header.key)} className="flex items-center gap-1 w-full">
                                             <span>{header.label}</span>
