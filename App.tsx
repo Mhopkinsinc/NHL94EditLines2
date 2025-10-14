@@ -16,6 +16,7 @@ import { AppInfoModal } from './components/AppInfoModal';
 import { PlayerComparisonModal } from './components/PlayerComparisonModal';
 import { WelcomeAnimation } from './components/WelcomeAnimation';
 import Sidebar from './components/Sidebar';
+import { PlayerDataGrid } from './components/PlayerDataGrid';
 
 type DragSource =
   | { type: 'FORWARD_LINE'; lineIndex: number; position: 'LW' | 'C' | 'RW' | 'EX' }
@@ -1222,6 +1223,8 @@ const App: React.FC = () => {
                       </>
                     )}
                   </>
+                ) : activeView === 'player-data-players' && romInfo ? (
+                  <PlayerDataGrid teams={romInfo.teams} />
                 ) : (
                   <Placeholder text={`${activeView.charAt(0).toUpperCase() + activeView.slice(1).replace('-',' ')} View`} />
                 )}

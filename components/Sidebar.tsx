@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
     Bars3Icon,
     PencilIcon,
-    ChartBarIcon,
+    UserGroupIcon,
     Cog6ToothIcon,
     QuestionMarkCircleIcon,
     PowerIcon,
@@ -22,7 +22,7 @@ const navItems = [
     { 
         id: 'player-data', 
         label: 'Player Data', 
-        icon: ChartBarIcon,
+        icon: UserGroupIcon,
         children: [
             { id: 'player-data-players', label: 'Players' },
             { id: 'player-data-goalies', label: 'Goalies' },
