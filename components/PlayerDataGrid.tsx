@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import type { TeamInfo } from '../rom-parser';
 import type { Player } from '../types';
 import { calculateSkaterOverall } from '../utils';
@@ -20,6 +20,9 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
         key: 'overall',
         direction: 'desc',
     });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(25);
 
     const sortedSkaters = useMemo(() => {
         const skaters: SkaterData[] = teams
@@ -33,11 +36,18 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                         teamAbv: team.abv,
                     }))
             );
+        
+        const filteredSkaters = searchTerm
+            ? skaters.filter(player =>
+                player.name.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            : skaters;
+
 
         const { key, direction } = sortConfig;
 
         // Use a stable sort by creating a new sorted array
-        return [...skaters].sort((a, b) => {
+        return [...filteredSkaters].sort((a, b) => {
             let aValue: any;
             let bValue: any;
 
@@ -74,7 +84,18 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
 
             return result;
         });
-    }, [teams, sortConfig]);
+    }, [teams, sortConfig, searchTerm]);
+    
+    const { paginatedSkaters, totalPages } = useMemo(() => {
+        const totalPages = Math.ceil(sortedSkaters.length / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return { paginatedSkaters: sortedSkaters.slice(startIndex, endIndex), totalPages };
+    }, [sortedSkaters, currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, sortConfig, itemsPerPage]);
 
     const handleSort = (key: SortableKeys) => {
         setSortConfig(current => {
@@ -124,51 +145,109 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
     };
 
     return (
-        <div className="bg-[#2B3544] p-4 rounded-lg overflow-x-auto">
-            <h2 className="text-2xl font-bold mb-4">Player Data</h2>
+        <div className="bg-[#2B3544] p-4 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Player Data</h2>
+                <div className="relative">
+                     <input 
+                        type="text"
+                        placeholder="Search players..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-64 p-1.5 pl-4"
+                        aria-label="Search players by name"
+                    />
+                </div>
+            </div>
             <div className="border border-gray-700 rounded-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-700 text-sm">
-                    <thead className="bg-gray-800">
-                        <tr>
-                            {headerGroups.map((header) => (
-                                <th
-                                    key={header.key}
-                                    scope="col"
-                                    className={`px-3 py-2 text-left text-xs font-bold text-gray-300 uppercase tracking-wider ${header.color}`}
-                                >
-                                    <button onClick={() => handleSort(header.key)} className="flex items-center gap-1 w-full">
-                                        <span>{header.label}</span>
-                                        <SortIcon columnKey={header.key} />
-                                    </button>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="bg-[#212934] divide-y divide-gray-700">
-                        {sortedSkaters.map((player) => (
-                            <tr key={player.id} className="hover:bg-gray-800/50">
-                                <td className={`px-3 py-2 whitespace-nowrap font-medium text-white ${getCellColor(0)}`}>{player.name}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-gray-400 text-center ${getCellColor(1)}`}>{player.teamAbv}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-gray-300 ${getCellColor(2)}`}>{player.attributes.handed === 0 ? 'Lefty' : 'Righty'}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center font-bold text-white ${getCellColor(3)}`}>{player.overall}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(4)}`}>{player.attributes.weight}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(5)}`}>{player.attributes.checking}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(6)}`}>{player.attributes.shtpower}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(7)}`}>{player.attributes.shtacc}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(8)}`}>{player.attributes.speed}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(9)}`}>{player.attributes.agility}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(10)}`}>{player.attributes.stickhand}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(11)}`}>{player.attributes.passacc}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(12)}`}>{player.attributes.oawareness}</td>
-                                <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(13)}`}>{player.attributes.dawareness}</td>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-700 text-sm">
+                        <thead className="bg-gray-800">
+                            <tr>
+                                {headerGroups.map((header) => (
+                                    <th
+                                        key={header.key}
+                                        scope="col"
+                                        className={`px-3 py-2 text-left text-xs font-bold text-gray-300 uppercase tracking-wider ${header.color}`}
+                                    >
+                                        <button onClick={() => handleSort(header.key)} className="flex items-center gap-1 w-full">
+                                            <span>{header.label}</span>
+                                            <SortIcon columnKey={header.key} />
+                                        </button>
+                                    </th>
+                                ))}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="bg-[#212934] divide-y divide-gray-700">
+                            {paginatedSkaters.map((player) => (
+                                <tr key={player.id} className="hover:bg-gray-800/50">
+                                    <td className={`px-3 py-2 whitespace-nowrap font-medium text-white ${getCellColor(0)}`}>{player.name}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-gray-400 text-center ${getCellColor(1)}`}>{player.teamAbv}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-gray-300 ${getCellColor(2)}`}>{player.attributes.handed === 0 ? 'Lefty' : 'Righty'}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center font-bold text-white ${getCellColor(3)}`}>{player.overall}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(4)}`}>{player.attributes.weight}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(5)}`}>{player.attributes.checking}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(6)}`}>{player.attributes.shtpower}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(7)}`}>{player.attributes.shtacc}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(8)}`}>{player.attributes.speed}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(9)}`}>{player.attributes.agility}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(10)}`}>{player.attributes.stickhand}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(11)}`}>{player.attributes.passacc}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(12)}`}>{player.attributes.oawareness}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(13)}`}>{player.attributes.dawareness}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
                 {sortedSkaters.length === 0 && (
-                    <p className="text-center text-gray-500 py-10">No skater data found in ROM.</p>
+                    <p className="text-center text-gray-500 py-10">
+                        {searchTerm ? `No players found for "${searchTerm}".` : 'No skater data found in ROM.'}
+                    </p>
                 )}
             </div>
+             {totalPages > 0 && (
+                <div className="flex justify-between items-center mt-4 text-sm text-gray-300">
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="items-per-page" className="font-medium">Rows per page:</label>
+                        <select
+                            id="items-per-page"
+                            value={itemsPerPage}
+                            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                            className="bg-gray-800 border border-gray-600 rounded-md p-1 focus:ring-sky-500 focus:border-sky-500"
+                        >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                         <span className="text-gray-400">| Total Players: {sortedSkaters.length}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <span className="font-semibold">
+                            Page {totalPages > 0 ? currentPage : 0} of {totalPages}
+                        </span>
+                        <div className="flex items-center gap-2">
+                             <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 bg-gray-700 rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Go to previous page"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className="px-3 py-1 bg-gray-700 rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Go to next page"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
