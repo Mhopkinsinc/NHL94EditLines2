@@ -16,12 +16,30 @@ interface SkaterData extends Player {
 
 type SortableKeys = keyof Omit<SkaterData, 'attributes' | 'id' | 'statusIcon' | 'role'> | keyof SkaterData['attributes'];
 
+const FilterButton: React.FC<{
+    label: 'All' | 'Forwards' | 'Defensemen';
+    value: 'All' | 'F' | 'D';
+    currentFilter: 'All' | 'F' | 'D';
+    onClick: (filter: 'All' | 'F' | 'D') => void;
+}> = ({ label, value, currentFilter, onClick }) => {
+    const isActive = value === currentFilter;
+    return (
+        <button
+            onClick={() => onClick(value)}
+            className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${isActive ? 'bg-sky-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        >
+            {label}
+        </button>
+    );
+};
+
 export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
     const [sortConfig, setSortConfig] = useState<{ key: SortableKeys; direction: 'asc' | 'desc' }>({
         key: 'overall',
         direction: 'desc',
     });
     const [searchTerm, setSearchTerm] = useState('');
+    const [positionFilter, setPositionFilter] = useState<'All' | 'F' | 'D'>('All');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
 
@@ -39,11 +57,11 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                     }))
             );
         
-        const filteredSkaters = searchTerm
-            ? skaters.filter(player =>
-                player.name.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-            : skaters;
+        const filteredSkaters = skaters.filter(player => {
+            const positionMatch = positionFilter === 'All' || player.position === positionFilter;
+            const searchMatch = !searchTerm || player.name.toLowerCase().includes(searchTerm.toLowerCase());
+            return positionMatch && searchMatch;
+        });
 
 
         const { key, direction } = sortConfig;
@@ -86,7 +104,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
 
             return result;
         });
-    }, [teams, sortConfig, searchTerm]);
+    }, [teams, sortConfig, searchTerm, positionFilter]);
     
     const { paginatedSkaters, totalPages } = useMemo(() => {
         const totalPages = Math.ceil(sortedSkaters.length / itemsPerPage);
@@ -97,7 +115,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, sortConfig, itemsPerPage]);
+    }, [searchTerm, sortConfig, itemsPerPage, positionFilter]);
 
     const handleSort = (key: SortableKeys) => {
         setSortConfig(current => {
@@ -151,15 +169,22 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
         <div className="bg-[#2B3544] p-4 rounded-lg">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Player Data</h2>
-                <div className="relative">
-                     <input 
-                        type="text"
-                        placeholder="Search players..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-64 p-1.5 pl-4"
-                        aria-label="Search players by name"
-                    />
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center bg-gray-800 rounded-md p-1 gap-1">
+                        <FilterButton label="All" value="All" currentFilter={positionFilter} onClick={setPositionFilter} />
+                        <FilterButton label="Forwards" value="F" currentFilter={positionFilter} onClick={setPositionFilter} />
+                        <FilterButton label="Defensemen" value="D" currentFilter={positionFilter} onClick={setPositionFilter} />
+                    </div>
+                    <div className="relative">
+                         <input 
+                            type="text"
+                            placeholder="Search players..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-64 p-1.5 pl-4"
+                            aria-label="Search players by name"
+                        />
+                    </div>
                 </div>
             </div>
             <div className="border border-gray-700 rounded-lg overflow-hidden">
