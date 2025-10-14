@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Player } from '../types';
 import { AnchorIcon, DotsIcon, FeatherIcon, RookieIcon, WaiversIcon } from './icons';
 import { torontoLogoDataUri } from './TorontoLogo';
@@ -44,6 +44,9 @@ const PlayerStatusIcon: React.FC<{ status?: string }> = ({ status }) => {
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onRemove, onViewAttributes, onCompare, isDragging, isGhost, menuOpen, onToggleMenu, onCloseMenu, selectedTeamName, isTourStep, isComparisonMode, firstComparisonPlayer }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [cardWidth, setCardWidth] = useState(0);
+
   const isGoalie = player.role === 'Goalie';
   // FIX: Define isHeavyweight and isLightweight based on player attributes to resolve undefined variable errors.
   const isHeavyweight = player.attributes.weight >= 10;
@@ -125,6 +128,29 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
     };
   }, [menuOpen, onCloseMenu]);
 
+   useEffect(() => {
+    if (!cardRef.current) return;
+
+    // Set initial width to avoid a flicker on first render
+    setCardWidth(cardRef.current.offsetWidth);
+
+    const resizeObserver = new ResizeObserver(entries => {
+      // requestAnimationFrame to avoid "ResizeObserver loop limit exceeded" error
+      window.requestAnimationFrame(() => {
+        if (!Array.isArray(entries) || !entries.length) {
+          return;
+        }
+        if (entries[0]) {
+            setCardWidth(entries[0].contentRect.width);
+        }
+      });
+    });
+
+    resizeObserver.observe(cardRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
   const backgroundStyle = useMemo(() => {
     const style = {
       backgroundRepeat: 'no-repeat',
@@ -169,6 +195,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
 
   return (
     <div
+      ref={cardRef}
       draggable={!isGhost && !!onDragStart && !isComparisonMode}
       onDragStart={!isGhost && !isComparisonMode ? handleDragStart : undefined}
       onClick={handleCardClick}
@@ -258,8 +285,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
                             </div>
                         )}
                     </div>
-                    <div className="text-white">{isGoalie ? 'Glove:' : 'Shoots:'} {player.attributes.handed === 0 ? 'Left' : 'Right'}</div>
-                    <div className="text-white">Wt: {player.attributes.weight}/{140 + (8 * player.attributes.weight)}</div>
+                    {cardWidth > 190 && (
+                        <>
+                            <div className="text-white">{isGoalie ? 'Glove:' : 'Shoots:'} {player.attributes.handed === 0 ? 'Left' : 'Right'}</div>
+                            <div className="text-white">Wt: {player.attributes.weight}/{140 + (8 * player.attributes.weight)}</div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
@@ -272,10 +303,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
                 <span className="font-bold text-[10px] text-white uppercase tracking-wider">agl/spd</span>
                 <span className="block font-mono text-sm text-white leading-tight">{player.attributes.agility}/{player.attributes.speed}</span>
               </div>
-              <div className="text-center">
-                <span className="font-bold text-[10px] text-white uppercase tracking-wider">DFA/PCK</span>
-                <span className="block font-mono text-sm text-white leading-tight">{player.attributes.dawareness}/{player.attributes.shtpower}</span>
-              </div>
+              {cardWidth > 120 && (
+                  <div className="text-center">
+                    <span className="font-bold text-[10px] text-white uppercase tracking-wider">DFA/PCK</span>
+                    <span className="block font-mono text-sm text-white leading-tight">{player.attributes.dawareness}/{player.attributes.shtpower}</span>
+                  </div>
+              )}
             </>
           ) : (
             <>
@@ -283,14 +316,18 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
                 <span className="font-bold text-[10px] text-white uppercase tracking-wider">agl/spd</span>
                 <span className="block font-mono text-sm text-white leading-tight">{player.attributes.agility}/{player.attributes.speed}</span>
               </div>
-              <div className="text-center">
-                <span className="font-bold text-[10px] text-white uppercase tracking-wider">shp/sha</span>
-                <span className="block font-mono text-sm text-white leading-tight">{player.attributes.shtpower}/{player.attributes.shtacc}</span>
-              </div>
-              <div className="text-center">
-                <span className="font-bold text-[10px] text-white uppercase tracking-wider">sth/pas</span>
-                <span className="block font-mono text-sm text-white leading-tight">{player.attributes.stickhand}/{player.attributes.passacc}</span>
-              </div>
+              {cardWidth > 120 && (
+                  <div className="text-center">
+                    <span className="font-bold text-[10px] text-white uppercase tracking-wider">shp/sha</span>
+                    <span className="block font-mono text-sm text-white leading-tight">{player.attributes.shtpower}/{player.attributes.shtacc}</span>
+                  </div>
+              )}
+              {cardWidth > 170 && (
+                  <div className="text-center">
+                    <span className="font-bold text-[10px] text-white uppercase tracking-wider">sth/pas</span>
+                    <span className="block font-mono text-sm text-white leading-tight">{player.attributes.stickhand}/{player.attributes.passacc}</span>
+                  </div>
+              )}
             </>
           )}
         </div>
