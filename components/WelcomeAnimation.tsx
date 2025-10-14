@@ -6,6 +6,7 @@ import { nhl94LogoDataUri } from "./NHL94Logo";
 import { walesLogoDataUri } from "./WalesLogo";
 import { campbellLogoDataUri } from "./CampbellLogo";
 import { ducksLogoDataUri } from "./DucksLogo";
+import { whalersLogoDataUri } from "./WhalersLogo";
 
 const LOGO_SIZE = 120; // Increased base size for all logos.
 
@@ -23,7 +24,7 @@ interface LogoState {
   radius: number;
 }
 
-const availableLogos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri, walesLogoDataUri, campbellLogoDataUri, ducksLogoDataUri];
+const availableLogos = [torontoLogoDataUri, nhlLogoDataUri, chicagoLogoDataUri, nhl94LogoDataUri, walesLogoDataUri, campbellLogoDataUri, ducksLogoDataUri, whalersLogoDataUri];
 const totalLogos = availableLogos.length;
 
 
