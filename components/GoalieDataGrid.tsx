@@ -109,6 +109,7 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
     
     const headerGroups = [
         { label: 'Name', key: 'name' as SortableKeys },
+        { label: 'Team', key: 'teamAbv' as SortableKeys },
         { label: 'Glove Hand', key: 'handed' as SortableKeys },
         { label: 'Overall', key: 'overall' as SortableKeys, color: 'bg-black text-white' },
         { label: 'Weight', key: 'weight' as SortableKeys, color: 'bg-red-800' },
@@ -171,6 +172,7 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
                             {paginatedGoalies.map((player) => (
                                 <tr key={player.id} className="hover:bg-gray-800/50">
                                     <td className="px-3 py-2 font-medium text-white whitespace-nowrap" title={player.name}>{player.name}</td>
+                                    <td className="px-3 py-2 whitespace-nowrap text-gray-400 text-center">{player.teamAbv}</td>
                                     <td className={`px-3 py-2 whitespace-nowrap text-gray-300 ${player.attributes.handed === 1 ? 'bg-orange-900/40' : 'bg-green-900/30'}`}>{player.attributes.handed === 0 ? 'Lefty' : 'Righty'}</td>
                                     <td className="px-3 py-2 whitespace-nowrap text-center font-bold text-white bg-gray-500/20">{player.overall}</td>
                                     <td className="px-3 py-2 whitespace-nowrap text-center text-gray-300">{player.attributes.weight}</td>
