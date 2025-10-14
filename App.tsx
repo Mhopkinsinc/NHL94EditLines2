@@ -265,6 +265,15 @@ const App: React.FC = () => {
                     } 
                 },
                 { 
+                    element: '#tour-step-7', 
+                    popover: { 
+                        title: 'The Roster', 
+                        description: 'This is the full roster, organized by position. Drag a player from here and drop them into an empty slot on the lineup grid.',
+                        side: "top",
+                        align: 'start'
+                    } 
+                },
+                { 
                     element: '#tour-step-5', 
                     popover: { 
                         title: 'The Lineup Grid', 
@@ -300,15 +309,6 @@ const App: React.FC = () => {
                             button.classList.remove('bg-white/10', 'ring-2', 'ring-sky-400');
                         }
                     }
-                },
-                { 
-                    element: '#tour-step-7', 
-                    popover: { 
-                        title: 'The Roster', 
-                        description: 'This is the full roster, organized by position. Drag a player from here and drop them into an empty slot on the lineup grid.',
-                        side: "top",
-                        align: 'start'
-                    } 
                 }
             ];
 
