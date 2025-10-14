@@ -83,8 +83,8 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
 
             // Handle special 'handed' case to sort by string 'Lefty'/'Righty'
             if (key === 'handed') {
-                aValue = aValue === 0 ? 'Lefty' : 'Righty';
-                bValue = bValue === 0 ? 'Lefty' : 'Righty';
+                aValue = aValue === 0 ? 'L' : 'R';
+                bValue = bValue === 0 ? 'L' : 'R';
             }
 
             let comparison = 0;
@@ -131,18 +131,18 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
         { label: 'Name', key: 'name' as SortableKeys, color: 'bg-slate-700' },
         { label: 'Team', key: 'teamAbv' as SortableKeys, color: 'bg-slate-700' },
         { label: 'Pos', key: 'position' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'Handed', key: 'handed' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'Overall', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100' },
-        { label: 'Weight', key: 'weight' as SortableKeys, color: 'bg-slate-800' },
-        { label: 'Checking', key: 'checking' as SortableKeys, color: 'bg-slate-800' },
-        { label: 'Shot Power', key: 'shtpower' as SortableKeys, color: 'bg-red-800/50' },
-        { label: 'Shot Accuracy', key: 'shtacc' as SortableKeys, color: 'bg-red-800/50' },
-        { label: 'Speed', key: 'speed' as SortableKeys, color: 'bg-green-800/50' },
-        { label: 'Agility', key: 'agility' as SortableKeys, color: 'bg-green-800/50' },
-        { label: 'Stick Handling', key: 'stickhand' as SortableKeys, color: 'bg-purple-800/50' },
-        { label: 'Passing', key: 'passacc' as SortableKeys, color: 'bg-purple-800/50' },
-        { label: 'Off Aware', key: 'oawareness' as SortableKeys, color: 'bg-sky-800/50' },
-        { label: 'Def Aware', key: 'dawareness' as SortableKeys, color: 'bg-sky-800/50' },
+        { label: 'Hand', key: 'handed' as SortableKeys, color: 'bg-slate-700' },
+        { label: 'OVR', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100' },
+        { label: 'WT', key: 'weight' as SortableKeys, color: 'bg-slate-800' },
+        { label: 'CHK', key: 'checking' as SortableKeys, color: 'bg-slate-800' },
+        { label: 'SHP', key: 'shtpower' as SortableKeys, color: 'bg-red-800/50' },
+        { label: 'SHA', key: 'shtacc' as SortableKeys, color: 'bg-red-800/50' },
+        { label: 'SPD', key: 'speed' as SortableKeys, color: 'bg-green-800/50' },
+        { label: 'AGL', key: 'agility' as SortableKeys, color: 'bg-green-800/50' },
+        { label: 'STK', key: 'stickhand' as SortableKeys, color: 'bg-purple-800/50' },
+        { label: 'PAS', key: 'passacc' as SortableKeys, color: 'bg-purple-800/50' },
+        { label: 'OAW', key: 'oawareness' as SortableKeys, color: 'bg-sky-800/50' },
+        { label: 'DAW', key: 'dawareness' as SortableKeys, color: 'bg-sky-800/50' },
     ];
     
     const getCellColor = (index: number): string => {
@@ -189,14 +189,14 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
             </div>
             <div className="border border-gray-700 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-700 text-sm">
+                    <table className="w-full divide-y divide-gray-700 text-sm table-fixed">
                         <thead className="bg-gray-800">
                             <tr>
-                                {headerGroups.map((header) => (
+                                {headerGroups.map((header, index) => (
                                     <th
                                         key={header.key}
                                         scope="col"
-                                        className={`px-3 py-2 text-left text-xs font-bold text-gray-300 uppercase tracking-wider ${header.color}`}
+                                        className={`px-2 py-2 text-left text-xs font-bold text-gray-300 uppercase tracking-wider ${header.color} ${index === 0 ? 'w-48' : ''}`}
                                     >
                                         <button onClick={() => handleSort(header.key)} className="flex items-center gap-1 w-full">
                                             <span>{header.label}</span>
@@ -209,21 +209,21 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                         <tbody className="bg-[#212934] divide-y divide-gray-700">
                             {paginatedSkaters.map((player) => (
                                 <tr key={player.id} className="hover:bg-gray-800/50">
-                                    <td className={`px-3 py-2 whitespace-nowrap font-medium text-white ${getCellColor(0)}`}>{player.name}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-gray-400 text-center ${getCellColor(1)}`}>{player.teamAbv}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-gray-300 text-center ${getCellColor(2)}`}>{player.position}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-gray-300 ${getCellColor(3)}`}>{player.attributes.handed === 0 ? 'Lefty' : 'Righty'}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center font-bold text-white ${getCellColor(4)}`}>{player.overall}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(5)}`}>{player.attributes.weight}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(6)}`}>{player.attributes.checking}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(7)}`}>{player.attributes.shtpower}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(8)}`}>{player.attributes.shtacc}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(9)}`}>{player.attributes.speed}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(10)}`}>{player.attributes.agility}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(11)}`}>{player.attributes.stickhand}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(12)}`}>{player.attributes.passacc}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(13)}`}>{player.attributes.oawareness}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(14)}`}>{player.attributes.dawareness}</td>
+                                    <td className={`px-2 py-2 font-medium text-white truncate ${getCellColor(0)}`} title={player.name}>{player.name}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-gray-400 text-center ${getCellColor(1)}`}>{player.teamAbv}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-gray-300 text-center ${getCellColor(2)}`}>{player.position}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-gray-300 text-center ${getCellColor(3)}`}>{player.attributes.handed === 0 ? 'L' : 'R'}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center font-bold text-white ${getCellColor(4)}`}>{player.overall}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(5)}`}>{player.attributes.weight}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(6)}`}>{player.attributes.checking}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(7)}`}>{player.attributes.shtpower}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(8)}`}>{player.attributes.shtacc}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(9)}`}>{player.attributes.speed}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(10)}`}>{player.attributes.agility}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(11)}`}>{player.attributes.stickhand}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(12)}`}>{player.attributes.passacc}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(13)}`}>{player.attributes.oawareness}</td>
+                                    <td className={`px-2 py-2 whitespace-nowrap text-center text-gray-300 ${getCellColor(14)}`}>{player.attributes.dawareness}</td>
                                 </tr>
                             ))}
                         </tbody>
