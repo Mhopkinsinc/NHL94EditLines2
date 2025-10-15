@@ -33,6 +33,13 @@
             "type": "image/png",
             "form_factor": "wide",
             "label": "App on desktop"
+          },
+            {
+            "src": "/NHL94EditLines2/desktop_wide.png",
+            "sizes": "411x781",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Mobile View"
           }
         ]
 }
