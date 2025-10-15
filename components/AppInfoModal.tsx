@@ -12,7 +12,7 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({ onClose }) => {
             try {
                 // Prepend the base URL to correctly locate version.json in both dev and prod.
                 // FIX: Cast `import.meta` to `any` to access Vite's `env` properties which are not in the default TS types.
-                const response = await fetch(`${(import.meta as any).env.BASE_URL}version.json`);
+                const response = await fetch(`${(import.meta as any).env.BASE_URL}/version.json`);
                 if (response.ok) {
                     const data = await response.json();
                     setVersion(data.version || 'N/A');
