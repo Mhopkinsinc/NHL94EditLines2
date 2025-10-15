@@ -1,11 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface AppInfoModalProps {
   onClose: () => void;
 }
 
 export const AppInfoModal: React.FC<AppInfoModalProps> = ({ onClose }) => {
+    const [version, setVersion] = useState('...');
+
     useEffect(() => {
+        const fetchVersion = async () => {
+            try {
+                const response = await fetch('version.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    setVersion(data.version || 'N/A');
+                } else {
+                    setVersion('N/A');
+                }
+            } catch (error) {
+                console.error('Failed to fetch version:', error);
+                setVersion('N/A');
+            }
+        };
+
+        fetchVersion();
+
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 onClose();
@@ -56,7 +75,7 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({ onClose }) => {
                         Enjoy, any feedback is welcome.
                     </p>
                      <p>
-                        v 2025.10.10
+                        v {version}
                     </p>
                 </div>
 
