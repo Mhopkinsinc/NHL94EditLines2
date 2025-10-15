@@ -195,10 +195,10 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                     </div>
                 </div>
             </div>
-            <div className="border border-gray-700 rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
+            <div className="border border-gray-700 rounded-lg overflow-auto relative max-h-[60vh]">
+                {sortedSkaters.length > 0 ? (
                     <table className="w-full divide-y divide-gray-700 text-sm">
-                        <thead className="bg-gray-800">
+                        <thead className="bg-gray-800 sticky top-0 z-10">
                             <tr>
                                 {headerGroups.map((header) => (
                                     <th
@@ -236,8 +236,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                             ))}
                         </tbody>
                     </table>
-                </div>
-                {sortedSkaters.length === 0 && (
+                ) : (
                     <p className="text-center text-gray-500 py-10">
                         {searchTerm ? `No players found for "${searchTerm}".` : 'No skater data found in ROM.'}
                     </p>
