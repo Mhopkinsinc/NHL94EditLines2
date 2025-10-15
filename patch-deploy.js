@@ -15,6 +15,7 @@ Object.entries(pkg).forEach(([key, value]) => {
   }
 });
 newPkg.scripts = newPkg.scripts || {};
+newPkg.scripts.dev = "node scripts/version.js && vite";
 newPkg.scripts.prebuild = "node scripts/version.js";
 newPkg.scripts.predeploy = "npm run build";
 newPkg.scripts.deploy = "gh-pages -d dist";
