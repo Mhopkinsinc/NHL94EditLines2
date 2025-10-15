@@ -16,6 +16,11 @@ interface SkaterData extends Player {
 
 type SortableKeys = keyof Omit<SkaterData, 'attributes' | 'id' | 'statusIcon' | 'role'> | keyof SkaterData['attributes'];
 
+const getLastName = (name: string): string => {
+    const parts = name.split(' ');
+    return parts[parts.length - 1];
+};
+
 const FilterButton: React.FC<{
     label: 'All' | 'Forwards' | 'Defensemen';
     value: 'All' | 'F' | 'D';
@@ -73,7 +78,10 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
 
             const topLevelKeys: (keyof SkaterData)[] = ['name', 'overall', 'teamAbv', 'position'];
 
-            if (topLevelKeys.includes(key as keyof SkaterData)) {
+            if (key === 'name') {
+                aValue = getLastName(a.name);
+                bValue = getLastName(b.name);
+            } else if (topLevelKeys.includes(key as keyof SkaterData)) {
                 aValue = a[key as keyof SkaterData];
                 bValue = b[key as keyof SkaterData];
             } else {
@@ -81,7 +89,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                 bValue = b.attributes[key as keyof SkaterData['attributes']];
             }
 
-            // Handle special 'handed' case to sort by string 'Lefty'/'Righty'
+            // Handle special 'handed' case to sort by string 'L'/'R'
             if (key === 'handed') {
                 aValue = aValue === 0 ? 'L' : 'R';
                 bValue = bValue === 0 ? 'L' : 'R';
@@ -97,8 +105,8 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
             // Apply direction
             const result = direction === 'asc' ? comparison : -comparison;
 
-            // Add stable sort: if primary sort is equal, sort by name
-            if (result === 0 && key !== 'name') {
+            // Add stable sort: if primary sort is equal, sort by full name
+            if (result === 0) {
                 return a.name.localeCompare(b.name);
             }
 
