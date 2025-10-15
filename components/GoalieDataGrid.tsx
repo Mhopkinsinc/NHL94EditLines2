@@ -16,6 +16,11 @@ interface GoalieData extends Player {
 
 type SortableKeys = keyof Omit<GoalieData, 'attributes' | 'id' | 'statusIcon' | 'role'> | keyof GoalieData['attributes'];
 
+const getLastName = (name: string): string => {
+    const parts = name.split(' ');
+    return parts[parts.length - 1];
+};
+
 export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
     const [sortConfig, setSortConfig] = useState<{ key: SortableKeys; direction: 'asc' | 'desc' }>({
         key: 'overall',
@@ -55,8 +60,11 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
             let bValue: any;
 
             const topLevelKeys: (keyof GoalieData)[] = ['name', 'overall', 'teamAbv', 'totalStickGlove'];
-
-            if (topLevelKeys.includes(key as keyof GoalieData)) {
+            
+            if (key === 'name') {
+                aValue = getLastName(a.name);
+                bValue = getLastName(b.name);
+            } else if (topLevelKeys.includes(key as keyof GoalieData)) {
                 aValue = a[key as keyof GoalieData];
                 bValue = b[key as keyof GoalieData];
             } else {
@@ -78,7 +86,7 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
             
             const result = direction === 'asc' ? comparison : -comparison;
 
-            if (result === 0 && key !== 'name') {
+            if (result === 0) {
                 return a.name.localeCompare(b.name);
             }
 
