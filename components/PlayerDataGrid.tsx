@@ -216,7 +216,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                         </thead>
                         <tbody className="bg-[#212934] divide-y divide-gray-700">
                             {paginatedSkaters.map((player) => (
-                                <tr key={player.id} className="hover:bg-gray-800/50">
+                                <tr key={`${player.name}-${player.teamAbv}`} className="hover:bg-gray-800/50">
                                     <td className={`px-2 py-2 font-medium text-white truncate ${getCellColor(0)}`} title={player.name}>{player.name}</td>
                                     <td className={`px-2 py-2 whitespace-nowrap text-gray-400 text-center ${getCellColor(1)}`}>{player.teamAbv}</td>
                                     <td className={`px-2 py-2 whitespace-nowrap text-gray-300 text-center ${getCellColor(2)}`}>{player.position}</td>
