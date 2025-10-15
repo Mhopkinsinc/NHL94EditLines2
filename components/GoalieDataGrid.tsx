@@ -178,7 +178,7 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
                         </thead>
                         <tbody className="bg-[#212934] divide-y divide-gray-700">
                             {paginatedGoalies.map((player) => (
-                                <tr key={player.id} className="hover:bg-gray-800/50">
+                                <tr key={`${player.name}-${player.teamAbv}`} className="hover:bg-gray-800/50">
                                     <td className="px-3 py-2 font-medium text-white whitespace-nowrap" title={player.name}>{player.name}</td>
                                     <td className="px-3 py-2 whitespace-nowrap text-gray-400 text-center">{player.teamAbv}</td>
                                     <td className={`px-3 py-2 whitespace-nowrap text-gray-300 ${player.attributes.handed === 1 ? 'bg-orange-900/40' : 'bg-green-900/30'}`}>{player.attributes.handed === 0 ? 'Lefty' : 'Righty'}</td>
