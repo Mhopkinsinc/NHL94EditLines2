@@ -149,10 +149,10 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
                     />
                 </div>
             </div>
-            <div className="border border-gray-700 rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
+            <div className="border border-gray-700 rounded-lg overflow-auto relative max-h-[60vh]">
+                {sortedGoalies.length > 0 ? (
                     <table className="w-full divide-y divide-gray-700 text-sm table-auto">
-                        <thead className="bg-gray-800">
+                        <thead className="bg-gray-800 sticky top-0 z-10">
                             <tr>
                                 {headerGroups.map((header) => (
                                     <th
@@ -189,8 +189,7 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
                             ))}
                         </tbody>
                     </table>
-                </div>
-                {sortedGoalies.length === 0 && (
+                ) : (
                     <p className="text-center text-gray-500 py-10">
                         {searchTerm ? `No goalies found for "${searchTerm}".` : 'No goalie data found in ROM.'}
                     </p>
