@@ -15,7 +15,8 @@ const ComparisonRow: React.FC<{
   numericValue1: number | string;
   numericValue2: number | string;
   higherIsBetter?: boolean;
-}> = ({ label, fullName, value1, value2, numericValue1, numericValue2, higherIsBetter = true }) => {
+  highlight?: boolean;
+}> = ({ label, fullName, value1, value2, numericValue1, numericValue2, higherIsBetter = true, highlight = false }) => {
   let p1Better = false;
   let p2Better = false;
 
@@ -37,11 +38,11 @@ const ComparisonRow: React.FC<{
 
 
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm py-1.5 border-b border-white/10">
+    <div className={`grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm py-1.5 border-b border-white/10 ${highlight ? 'bg-sky-900/50 animate-pulse rounded px-2 -mx-2' : ''}`}>
       <span className={`${valueClasses} ${p1Classes} text-right flex justify-end items-center gap-1`}>
         {p1DisplayValue}
       </span>
-      <span className="text-center text-gray-400 uppercase text-xs w-28 truncate" title={fullName || label}>
+      <span className={`text-center uppercase text-xs w-28 truncate ${highlight ? 'font-bold text-sky-300' : 'text-gray-400'}`} title={fullName || label}>
         {label}
       </span>
       <span className={`${valueClasses} ${p2Classes} text-left flex justify-start items-center gap-1`}>
@@ -130,14 +131,14 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
           <div className="space-y-4">
             <div>
               <h4 className="font-bold text-sky-400 text-center mb-1">Skating</h4>
-              <ComparisonRow label="Agility" value1={p1.attributes.agility} numericValue1={p1.attributes.agility} value2={p2.attributes.agility} numericValue2={p2.attributes.agility} />
+              <ComparisonRow label="Agility" value1={p1.attributes.agility} numericValue1={p1.attributes.agility} value2={p2.attributes.agility} numericValue2={p2.attributes.agility} highlight={bothAreGoalies} />
               <ComparisonRow label="Speed" value1={p1.attributes.speed} numericValue1={p1.attributes.speed} value2={p2.attributes.speed} numericValue2={p2.attributes.speed} />
             </div>
 
              <div>
               <h4 className="font-bold text-sky-400 text-center mb-1">Awareness</h4>
               <ComparisonRow label="Off. Aware" fullName="Offensive Awareness" value1={p1.attributes.oawareness} numericValue1={p1.attributes.oawareness} value2={p2.attributes.oawareness} numericValue2={p2.attributes.oawareness} />
-              <ComparisonRow label="Def. Aware" fullName="Defensive Awareness" value1={p1.attributes.dawareness} numericValue1={p1.attributes.dawareness} value2={p2.attributes.dawareness} numericValue2={p2.attributes.dawareness} />
+              <ComparisonRow label="Def. Aware" fullName="Defensive Awareness" value1={p1.attributes.dawareness} numericValue1={p1.attributes.dawareness} value2={p2.attributes.dawareness} numericValue2={p2.attributes.dawareness} highlight={bothAreGoalies} />
             </div>
             
             {!bothAreGoalies && (
@@ -153,7 +154,7 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
             {bothAreGoalies && (
                 <div>
                     <h4 className="font-bold text-sky-400 text-center mb-1">Goalie Skills</h4>
-                    <ComparisonRow label="Puck Control" value1={p1.attributes.shtpower} numericValue1={p1.attributes.shtpower} value2={p2.attributes.shtpower} numericValue2={p2.attributes.shtpower} />
+                    <ComparisonRow label="Puck Control" value1={p1.attributes.shtpower} numericValue1={p1.attributes.shtpower} value2={p2.attributes.shtpower} numericValue2={p2.attributes.shtpower} highlight={bothAreGoalies} />
                     <ComparisonRow label="Stick Left" value1={p1.attributes.roughness} numericValue1={p1.attributes.roughness} value2={p2.attributes.roughness} numericValue2={p2.attributes.roughness} />
                     <ComparisonRow label="Stick Right" value1={p1.attributes.endurance} numericValue1={p1.attributes.endurance} value2={p2.attributes.endurance} numericValue2={p2.attributes.endurance} />
                     <ComparisonRow label="Glove Left" value1={p1.attributes.aggressiveness} numericValue1={p1.attributes.aggressiveness} value2={p2.attributes.aggressiveness} numericValue2={p2.attributes.aggressiveness} />
@@ -178,6 +179,7 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
                   value2={p2WeightDisplay}
                   numericValue2={p2Weight}
                   higherIsBetter={false}
+                  highlight={bothAreGoalies}
               />
             </div>
           </div>
