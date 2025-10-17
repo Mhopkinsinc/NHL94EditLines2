@@ -19,15 +19,30 @@ interface AttributeBarProps {
     max?: number;
 }
 
-const getBarColor = (value: number) => {
-    if (value >= 4) return 'bg-green-500'; // 4-6 are green
-    if (value === 3) return 'bg-yellow-500'; // 3 is yellow
-    return 'bg-red-500'; // 1-2 are red
-};
-
 // Updated AttributeBar to be more compact to fix alignment
 const AttributeBar: React.FC<AttributeBarProps> = ({ label, value, fullName, max = 6 }) => {
-    const barColor = getBarColor(value);
+    const getBarColorForIndex = (index: number, totalValue: number): string => {
+        if (index >= totalValue) {
+            return 'bg-black/30'; // Not filled
+        }
+
+        if (totalValue < 3) {
+            return 'bg-red-500';
+        }
+        if (totalValue === 3) {
+            return 'bg-yellow-500';
+        }
+        // totalValue >= 4
+        if (totalValue < 5) {
+            return 'bg-green-500';
+        }
+        // totalValue >= 5
+        if (index < 4) { // Bars 1-4 (0-indexed)
+            return 'bg-green-500';
+        } else { // Bars 5, 6, 7 (index 4, 5, 6)
+            return 'bg-sky-500'; // Use highlight color for elite stats
+        }
+    };
 
     return (
         <div className="grid grid-cols-[auto_auto] justify-start items-center gap-x-2 mb-1.5">
@@ -41,7 +56,7 @@ const AttributeBar: React.FC<AttributeBarProps> = ({ label, value, fullName, max
                 {Array.from({ length: max }).map((_, i) => (
                     <div
                         key={i}
-                        className={`w-2 h-2 rounded-sm ${i < value ? barColor : 'bg-black/30'}`}
+                        className={`w-2 h-2 rounded-sm ${getBarColorForIndex(i, value)}`}
                     />
                 ))}
             </div>
@@ -147,6 +162,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
     // The fighting attribute is out of 15 (max raw value). The user wants 7 bars.
     // Logic: if odd, round down to even, then divide by 2. This is Math.floor(value / 2).
     const fightingDisplayValue = Math.floor(attributes.fighting / 2);
+    const fightingHeaderValue = attributes.fighting - (attributes.fighting % 2);
     const injuryValue = attributes.fighting >= 8 ? 'INJ G' : 'INJ P';
     const isLightweight = attributes.weight <= 5;
     const isHeavyweight = attributes.weight >= 10;
@@ -317,7 +333,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                         <AttributeBar label="Off. Aware" value={attributes.oawareness} fullName="Offensive Awareness" />
                                         <AttributeBar label="Def. Aware" value={attributes.dawareness} fullName="Defensive Awareness" />
                                     </AttributeCategory>
-                                    <AttributeCategory title="Misc" value1={attributes.endurance} value2={fightingDisplayValue}>
+                                    <AttributeCategory title="Misc" value1={attributes.endurance} value2={fightingHeaderValue}>
                                         <AttributeBar label="Endurance" value={attributes.endurance} />
                                         <AttributeBar label="Fighting" value={fightingDisplayValue} max={7} />
                                         <AttributeText label="DLV CHK" value={injuryValue} fullName="Injury (Delivering Check)" />
