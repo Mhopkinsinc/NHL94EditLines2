@@ -16,6 +16,7 @@ interface AttributeBarProps {
     label: string;
     value: number;
     fullName?: string;
+    max?: number;
 }
 
 const getBarColor = (value: number) => {
@@ -25,7 +26,7 @@ const getBarColor = (value: number) => {
 };
 
 // Updated AttributeBar to be more compact to fix alignment
-const AttributeBar: React.FC<AttributeBarProps> = ({ label, value, fullName }) => {
+const AttributeBar: React.FC<AttributeBarProps> = ({ label, value, fullName, max = 6 }) => {
     const barColor = getBarColor(value);
 
     return (
@@ -37,7 +38,7 @@ const AttributeBar: React.FC<AttributeBarProps> = ({ label, value, fullName }) =
                 {label}
             </span>
             <div className="flex items-center gap-0.5">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: max }).map((_, i) => (
                     <div
                         key={i}
                         className={`w-2 h-2 rounded-sm ${i < value ? barColor : 'bg-black/30'}`}
@@ -47,6 +48,18 @@ const AttributeBar: React.FC<AttributeBarProps> = ({ label, value, fullName }) =
         </div>
     );
 }; 
+
+const AttributeText: React.FC<{ label: string; value: string; fullName?: string }> = ({ label, value, fullName }) => (
+    <div className="grid grid-cols-[auto_auto] justify-start items-center gap-x-2 mb-1.5">
+        <span
+            className="w-20 text-xs uppercase tracking-wider text-gray-400 font-semibold truncate"
+            title={fullName || label}
+        >
+            {label}
+        </span>
+        <span className="font-mono text-sm text-white leading-tight font-bold">{value}</span>
+    </div>
+);
 
 
 const AttributeCategory: React.FC<{
@@ -131,9 +144,10 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
 
     const { attributes } = player;
     const isGoalie = player.role === 'Goalie';
-    // The fighting attribute is out of 12, but displayed out of 6.
-    // Each bar represents 2 points of fighting skill.
-    const fightingDisplayValue = Math.ceil(attributes.fighting / 2);
+    // The fighting attribute is out of 15 (max raw value). The user wants 7 bars.
+    // Logic: if odd, round down to even, then divide by 2. This is Math.floor(value / 2).
+    const fightingDisplayValue = Math.floor(attributes.fighting / 2);
+    const injuryValue = attributes.fighting >= 8 ? 'INJ G' : 'INJ P';
     const isLightweight = attributes.weight <= 5;
     const isHeavyweight = attributes.weight >= 10;
 
@@ -184,110 +198,132 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
 
                 {/* Body */}
                 <div className="overflow-y-auto p-4 relative z-10">
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                        <AttributeCategory 
-                          title="Skating" 
-                          value1={attributes.agility} 
-                          value2={attributes.speed}
-                        >
-                            <AttributeBar label="Agility" value={attributes.agility} />
-                            <AttributeBar label="Speed" value={attributes.speed} />
-                        </AttributeCategory>
-                         <AttributeCategory 
-                          title={isGoalie ? "Puck Control" : "Shooting"}
-                          value1={attributes.shtpower}
-                          value2={isGoalie ? undefined : attributes.shtacc}
-                         >
-                            <AttributeBar label={isGoalie ? "Puck Control" : "SHT Power"} value={attributes.shtpower} fullName={isGoalie ? "Puck Control" : "Shot Power"} />
-                            {!isGoalie && <AttributeBar label="SHT ACC" value={attributes.shtacc} fullName="Shot Accuracy" />}
-                        </AttributeCategory>
-                        
+                    <div className="grid grid-cols-2 gap-x-6">
                         {isGoalie ? (
                             <>
-                                <AttributeCategory 
-                                    title="Stick"
-                                    value1={attributes.roughness}
-                                    value2={attributes.endurance}
-                                >
-                                    <AttributeBar label="Stick Left" value={attributes.roughness} />
-                                    <AttributeBar label="Stick Right" value={attributes.endurance} />
-                                </AttributeCategory>
-                                <AttributeCategory 
-                                    title="Awareness"
-                                    value1={attributes.oawareness}
-                                    value2={attributes.dawareness}
-                                >
-                                    <AttributeBar label="Off. Aware" value={attributes.oawareness} fullName="Offensive Awareness" />
-                                    <AttributeBar label="Def. Aware" value={attributes.dawareness} fullName="Defensive Awareness" />
-                                </AttributeCategory>
-                                <AttributeCategory 
-                                    title="Glove"
-                                    value1={attributes.aggressiveness}
-                                    value2={attributes.passacc}
-                                >
-                                    <AttributeBar label="Glove Left" value={attributes.aggressiveness} />
-                                    <AttributeBar label="Glove Right" value={attributes.passacc} />
-                                </AttributeCategory>
+                                <div className="space-y-4">
+                                    <AttributeCategory 
+                                        title="Skating" 
+                                        value1={attributes.agility} 
+                                        value2={attributes.speed}
+                                    >
+                                        <AttributeBar label="Agility" value={attributes.agility} />
+                                        <AttributeBar label="Speed" value={attributes.speed} />
+                                    </AttributeCategory>
+                                    <AttributeCategory 
+                                        title="Stick"
+                                        value1={attributes.roughness}
+                                        value2={attributes.endurance}
+                                    >
+                                        <AttributeBar label="Stick Left" value={attributes.roughness} />
+                                        <AttributeBar label="Stick Right" value={attributes.endurance} />
+                                    </AttributeCategory>
+                                    <AttributeCategory 
+                                        title="Glove"
+                                        value1={attributes.aggressiveness}
+                                        value2={attributes.passacc}
+                                    >
+                                        <AttributeBar label="Glove Left" value={attributes.aggressiveness} />
+                                        <AttributeBar label="Glove Right" value={attributes.passacc} />
+                                    </AttributeCategory>
+                                </div>
+                                <div className="space-y-4">
+                                    <AttributeCategory 
+                                        title="Puck Control"
+                                        value1={attributes.shtpower}
+                                    >
+                                        <AttributeBar label="Puck Control" value={attributes.shtpower} />
+                                    </AttributeCategory>
+                                    <AttributeCategory 
+                                        title="Awareness"
+                                        value1={attributes.oawareness}
+                                        value2={attributes.dawareness}
+                                    >
+                                        <AttributeBar label="Off. Aware" value={attributes.oawareness} fullName="Offensive Awareness" />
+                                        <AttributeBar label="Def. Aware" value={attributes.dawareness} fullName="Defensive Awareness" />
+                                    </AttributeCategory>
+                                </div>
                             </>
                         ) : (
                             <>
-                                <AttributeCategory 
-                                    title="Playmaking"
-                                    value1={attributes.stickhand}
-                                    value2={attributes.passacc}
-                                >
-                                    <AttributeBar label="Stk Handl" value={attributes.stickhand} fullName="Stick Handling" />
-                                    <AttributeBar label="Pass ACC" value={attributes.passacc} fullName="Passing Accuracy" />                            
-                                </AttributeCategory>
-                                <AttributeCategory 
-                                    title="Awareness"
-                                    value1={attributes.oawareness}
-                                    value2={attributes.dawareness}
-                                >
-                                    <AttributeBar label="Off. Aware" value={attributes.oawareness} fullName="Offensive Awareness" />
-                                    <AttributeBar label="Def. Aware" value={attributes.dawareness} fullName="Defensive Awareness" />
-                                </AttributeCategory>
-                                <AttributeCategory 
-                                    title="Physical"
-                                    value1={attributes.aggressiveness}
-                                    value2={attributes.checking}
-                                >
-                                    <AttributeBar label="Aggressiveness" value={attributes.aggressiveness} />
-                                    <AttributeBar label="Checking" value={attributes.checking} />
-                                </AttributeCategory>
-                                <AttributeCategory title="Misc">
-                                    <AttributeBar label="Endurance" value={attributes.endurance} />
-                                    <AttributeBar label="Fighting" value={fightingDisplayValue} />
-                                </AttributeCategory>
-                                <AttributeCategory 
-                                    title="Pass/Shot Bias"
-                                    value1={attributes.roughness}
-                                >
-                                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 pt-1">
-                                        <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Pass</span>
-                                        <div className="relative justify-self-center" style={{ width: '58px', height: '1rem' }}>
-                                            <div className="absolute inset-0 flex items-center justify-center gap-0.5">
-                                                {Array.from({ length: 6 }).map((_, i) => {
-                                                    const isSelected = (attributes.roughness - 1) === i;
-                                                    return (
-                                                        <div key={i} className={`w-2 h-2 rounded-sm ${isSelected ? 'bg-green-500' : 'bg-black/30'}`} />
-                                                    );
-                                                })}
+                                {/* Left Column */}
+                                <div className="space-y-4">
+                                    <AttributeCategory 
+                                        title="Skating" 
+                                        value1={attributes.agility} 
+                                        value2={attributes.speed}
+                                    >
+                                        <AttributeBar label="Agility" value={attributes.agility} />
+                                        <AttributeBar label="Speed" value={attributes.speed} />
+                                    </AttributeCategory>
+                                    <AttributeCategory 
+                                        title="Playmaking"
+                                        value1={attributes.stickhand}
+                                        value2={attributes.passacc}
+                                    >
+                                        <AttributeBar label="Stk Handl" value={attributes.stickhand} fullName="Stick Handling" />
+                                        <AttributeBar label="Pass ACC" value={attributes.passacc} fullName="Passing Accuracy" />                            
+                                    </AttributeCategory>
+                                    <AttributeCategory 
+                                        title="Physical"
+                                        value1={attributes.aggressiveness}
+                                        value2={attributes.checking}
+                                    >
+                                        <AttributeBar label="Aggressiveness" value={attributes.aggressiveness} />
+                                        <AttributeBar label="Checking" value={attributes.checking} />
+                                    </AttributeCategory>
+                                    <AttributeCategory title="Pass/Shot Bias" value1={attributes.roughness}>
+                                        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2">
+                                            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Pass</span>
+                                            <div className="relative justify-self-center" style={{ width: '58px', height: '1rem' }}>
+                                                <div className="absolute inset-0 flex items-center justify-center gap-0.5">
+                                                    {Array.from({ length: 6 }).map((_, i) => {
+                                                        const isSelected = (attributes.roughness - 1) === i;
+                                                        return (
+                                                            <div key={i} className={`w-2 h-2 rounded-sm ${isSelected ? 'bg-green-500' : 'bg-black/30'}`} />
+                                                        );
+                                                    })}
+                                                </div>
+                                                {attributes.roughness >= 1 && attributes.roughness <= 6 && (
+                                                    <div 
+                                                        className="absolute -top-0.5 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-white"
+                                                        style={{ 
+                                                            left: `${((attributes.roughness - 1) * 10) + 4}px`,
+                                                            transform: 'translateX(-50%)'
+                                                        }}
+                                                        title={`Pass/Shot Bias: ${attributes.roughness}`}
+                                                    />
+                                                )}
                                             </div>
-                                            {attributes.roughness >= 1 && attributes.roughness <= 6 && (
-                                                <div 
-                                                    className="absolute -top-0.5 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-white"
-                                                    style={{ 
-                                                        left: `${((attributes.roughness - 1) * 10) + 4}px`,
-                                                        transform: 'translateX(-50%)'
-                                                    }}
-                                                    title={`Pass/Shot Bias: ${attributes.roughness}`}
-                                                />
-                                            )}
+                                            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Shot</span>
                                         </div>
-                                        <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Shot</span>
-                                    </div>
-                                </AttributeCategory>
+                                    </AttributeCategory>
+                                </div>
+                                {/* Right Column */}
+                                <div className="space-y-4">
+                                    <AttributeCategory 
+                                        title="Shooting"
+                                        value1={attributes.shtpower}
+                                        value2={attributes.shtacc}
+                                    >
+                                        <AttributeBar label="SHT Power" value={attributes.shtpower} fullName="Shot Power" />
+                                        <AttributeBar label="SHT ACC" value={attributes.shtacc} fullName="Shot Accuracy" />
+                                    </AttributeCategory>
+                                    <AttributeCategory 
+                                        title="Awareness"
+                                        value1={attributes.oawareness}
+                                        value2={attributes.dawareness}
+                                    >
+                                        <AttributeBar label="Off. Aware" value={attributes.oawareness} fullName="Offensive Awareness" />
+                                        <AttributeBar label="Def. Aware" value={attributes.dawareness} fullName="Defensive Awareness" />
+                                    </AttributeCategory>
+                                    <AttributeCategory title="Misc" value1={attributes.endurance} value2={fightingDisplayValue}>
+                                        <AttributeBar label="Endurance" value={attributes.endurance} />
+                                        <AttributeBar label="Fighting" value={fightingDisplayValue} max={7} />
+                                        <AttributeText label="DLV CHK" value={injuryValue} fullName="Injury (Delivering Check)" />
+                                        <AttributeText label="RCV CHK" value={injuryValue} fullName="Injury (Receiving Check)" />
+                                    </AttributeCategory>
+                                </div>
                             </>
                         )}
                     </div>
