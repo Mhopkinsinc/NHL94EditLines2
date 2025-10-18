@@ -354,12 +354,12 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                 <div className="p-3 mt-auto bg-black/20 border-t-2 border-sky-500/30 text-sm flex justify-around items-center text-center relative z-10">
                     <div>
                         <span className="text-gray-400 uppercase text-xs font-bold block">{isGoalie ? 'Glove Hand' : 'Shoots'}</span>
-                        <span className="font-semibold text-lg">{attributes.handed === 0 ? 'Left' : 'Right'}</span>
+                        <span className="font-semibold text-lg text-white">{attributes.handed === 0 ? 'Left' : 'Right'}</span>
                     </div>
                     <div>
                         <span className="text-gray-400 uppercase text-xs font-bold block">Weight</span>
                          <div className="relative inline-flex items-center">
-                           <span className="font-semibold text-lg">{140 + (8 * attributes.weight)}</span>
+                           <span className="font-semibold text-lg text-white">{140 + (8 * attributes.weight)}</span>
                            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2">
                                {isLightweight && <FeatherIcon className="w-5 h-5 text-white" />}
                                {isHeavyweight && <AnchorIcon className="w-5 h-5 text-white" />}
