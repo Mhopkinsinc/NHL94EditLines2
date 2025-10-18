@@ -1030,7 +1030,7 @@ const App: React.FC = () => {
                         <button
                             id="tour-step-2"
                             onClick={() => handleSaveChanges()}
-                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5"
+                            className={`bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5 ${isDirty ? 'animate-pulse' : ''}`}
                             disabled={!isDirty}
                             title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
                         >
@@ -1051,7 +1051,7 @@ const App: React.FC = () => {
                                   <button
                                     id="tour-step-3"
                                     onClick={handleOpenHistoryModal}
-                                    className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed"
+                                    className={`bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed ${isDirty ? 'animate-pulse' : ''}`}
                                     aria-label="Show Change History"
                                     disabled={historyLog.length === 0}
                                     title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
