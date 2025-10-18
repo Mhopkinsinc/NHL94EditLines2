@@ -70,8 +70,8 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
   const p2IsGoalie = p2.role === 'Goalie';
   const bothAreGoalies = p1IsGoalie && p2IsGoalie;
 
-  const p1Fighting = Math.floor(p1.attributes.fighting / 2);
-  const p2Fighting = Math.floor(p2.attributes.fighting / 2);
+  const p1Fighting = p1.attributes.fighting - (p1.attributes.fighting % 2);
+  const p2Fighting = p2.attributes.fighting - (p2.attributes.fighting % 2);
 
   const p1IsLightweight = p1.attributes.weight <= 5;
   const p1IsHeavyweight = p1.attributes.weight >= 10;
