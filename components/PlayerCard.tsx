@@ -246,7 +246,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
                         <PlayerStatusIcon status={player.statusIcon} />
                         {isHeavyweight && player.statusIcon !== 'anchor' && <AnchorIcon className="w-5 h-5 text-white" title="Heavyweight" />}
                         {isLightweight && <FeatherIcon className="w-5 h-5 text-white" title="Lightweight" />}
-                        {isInjuredForGame && <HospitalIcon className="w-5 h-5 text-white" title="Game Injury" />}
+                        {isInjuredForGame && <HospitalIcon className="w-5 h-5 text-white" title="Game Injury Prone" />}
                         {onToggleMenu && (
                             <div
                                 ref={menuRef}

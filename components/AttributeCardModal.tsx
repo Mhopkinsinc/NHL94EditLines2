@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import type { Player } from '../types';
-import { AnchorIcon, FeatherIcon } from './icons';
+import { AnchorIcon, FeatherIcon, HospitalIcon } from './icons';
 import { chicagoLogoDataUri } from './ChicagoLogo';
 import { torontoLogoDataUri } from './TorontoLogo';
 import { nhlLogoDataUri } from './NhlLogo';
@@ -159,6 +159,8 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
 
     const { attributes } = player;
     const isGoalie = player.role === 'Goalie';
+    const injuryValues = useMemo(() => new Set([2, 3, 6, 7, 10, 11]), []);
+    const isInjuredForGame = !isGoalie && injuryValues.has(player.attributes.fighting);
     // The fighting attribute is out of 15 (max raw value). The user wants 7 bars.
     // Logic: if odd, round down to even, then divide by 2. This is Math.floor(value / 2).
     const fightingDisplayValue = Math.floor(attributes.fighting / 2);
@@ -200,7 +202,10 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                         >
                             {player.name}
                         </h2>
-                        <p className="text-gray-400 font-semibold">{player.role}</p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-gray-400 font-semibold">{player.role}</p>
+                            {isInjuredForGame && <HospitalIcon className="w-5 h-5 text-white" title="Game Injury Prone" />}
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <img 

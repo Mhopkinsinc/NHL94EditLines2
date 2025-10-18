@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import type { Player } from '../types';
-import { AnchorIcon, FeatherIcon } from './icons';
+import { AnchorIcon, FeatherIcon, HospitalIcon } from './icons';
 
 interface PlayerComparisonModalProps {
   players: { p1: Player; p2: Player };
@@ -72,6 +72,10 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
 
   const p1Fighting = p1.attributes.fighting - (p1.attributes.fighting % 2);
   const p2Fighting = p2.attributes.fighting - (p2.attributes.fighting % 2);
+  
+  const injuryValues = new Set([2, 3, 6, 7, 10, 11]);
+  const p1IsInjuredForGame = !p1IsGoalie && injuryValues.has(p1.attributes.fighting);
+  const p2IsInjuredForGame = !p2IsGoalie && injuryValues.has(p2.attributes.fighting);
 
   const p1IsLightweight = p1.attributes.weight <= 5;
   const p1IsHeavyweight = p1.attributes.weight >= 10;
@@ -94,6 +98,20 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
       {p2Weight}
       {p2IsLightweight && <FeatherIcon className="w-4 h-4 text-white" />}
       {p2IsHeavyweight && <AnchorIcon className="w-4 h-4 text-white" />}
+    </>
+  );
+  
+  const p1FightingDisplay = (
+    <>
+      {p1IsInjuredForGame && <HospitalIcon className="w-5 h-5 text-white" title="Game Injury Prone" />}
+      {p1Fighting}
+    </>
+  );
+
+  const p2FightingDisplay = (
+    <>
+      {p2Fighting}
+      {p2IsInjuredForGame && <HospitalIcon className="w-5 h-5 text-white" title="Game Injury Prone" />}
     </>
   );
 
@@ -171,7 +189,13 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
                   <ComparisonRow label="Aggressiveness" value1={p1.attributes.aggressiveness} numericValue1={p1.attributes.aggressiveness} value2={p2.attributes.aggressiveness} numericValue2={p2.attributes.aggressiveness} />
                   <ComparisonRow label="Checking" value1={p1.attributes.checking} numericValue1={p1.attributes.checking} value2={p2.attributes.checking} numericValue2={p2.attributes.checking} />
                   <ComparisonRow label="Endurance" value1={p1.attributes.endurance} numericValue1={p1.attributes.endurance} value2={p2.attributes.endurance} numericValue2={p2.attributes.endurance} />
-                  <ComparisonRow label="Fighting" value1={p1Fighting} numericValue1={p1Fighting} value2={p2Fighting} numericValue2={p2Fighting} />
+                  <ComparisonRow 
+                    label="Fighting" 
+                    value1={p1FightingDisplay} 
+                    numericValue1={p1Fighting} 
+                    value2={p2FightingDisplay} 
+                    numericValue2={p2Fighting} 
+                  />
                 </>
               )}
               <ComparisonRow 
