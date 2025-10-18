@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Player } from '../types';
-import { AnchorIcon, DotsIcon, FeatherIcon, RookieIcon, WaiversIcon } from './icons';
+import { AnchorIcon, DotsIcon, FeatherIcon, RookieIcon, WaiversIcon, HospitalIcon } from './icons';
 import { torontoLogoDataUri } from './TorontoLogo';
 import { chicagoLogoDataUri } from './ChicagoLogo';
 import { nhlLogoDataUri } from './NhlLogo';
@@ -51,6 +51,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
   // FIX: Define isHeavyweight and isLightweight based on player attributes to resolve undefined variable errors.
   const isHeavyweight = player.attributes.weight >= 10;
   const isLightweight = player.attributes.weight <= 5;
+  const injuryValues = useMemo(() => new Set([2, 3, 6, 7, 10, 11]), []);
+  const isInjuredForGame = !isGoalie && injuryValues.has(player.attributes.fighting);
 
   const isCompatibleForComparison = useMemo(() => {
     if (!isComparisonMode || !firstComparisonPlayer || firstComparisonPlayer.id === player.id) {
@@ -244,6 +246,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onDragStart, onR
                         <PlayerStatusIcon status={player.statusIcon} />
                         {isHeavyweight && player.statusIcon !== 'anchor' && <AnchorIcon className="w-5 h-5 text-white" title="Heavyweight" />}
                         {isLightweight && <FeatherIcon className="w-5 h-5 text-white" title="Lightweight" />}
+                        {isInjuredForGame && <HospitalIcon className="w-5 h-5 text-white" title="Game Injury" />}
                         {onToggleMenu && (
                             <div
                                 ref={menuRef}
