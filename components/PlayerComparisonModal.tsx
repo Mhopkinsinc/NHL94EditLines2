@@ -163,7 +163,9 @@ export const PlayerComparisonModal: React.FC<PlayerComparisonModalProps> = ({ pl
             )}
             
             <div>
-              <h4 className="font-bold text-sky-400 text-center mb-1">Physical</h4>
+              {!bothAreGoalies && (
+                <h4 className="font-bold text-sky-400 text-center mb-1">Physical</h4>
+              )}
               {!bothAreGoalies && (
                 <>
                   <ComparisonRow label="Aggressiveness" value1={p1.attributes.aggressiveness} numericValue1={p1.attributes.aggressiveness} value2={p2.attributes.aggressiveness} numericValue2={p2.attributes.aggressiveness} />
