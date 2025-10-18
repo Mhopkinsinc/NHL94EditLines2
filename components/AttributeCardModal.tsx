@@ -167,7 +167,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
     const dlvChkValue = attributes.fighting >= 12 ? 'INJ G' : 'INJ P';
     
     const rcvChkValuesForInjP = [0, 1, 4, 5, 8, 9];
-    const rcvChkValue = rcvChkValuesForInjP.includes(attributes.fighting) ? 'INJ P' : 'INJ G';
+    const rcvChkValue = rcvChkValuesForInjP.includes(attributes.fighting) ? 'INJ P' : 'INJ G/P';
 
     const isLightweight = attributes.weight <= 5;
     const isHeavyweight = attributes.weight >= 10;
