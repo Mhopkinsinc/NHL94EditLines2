@@ -163,7 +163,12 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
     // Logic: if odd, round down to even, then divide by 2. This is Math.floor(value / 2).
     const fightingDisplayValue = Math.floor(attributes.fighting / 2);
     const fightingHeaderValue = attributes.fighting - (attributes.fighting % 2);
-    const injuryValue = attributes.fighting >= 8 ? 'INJ G' : 'INJ P';
+
+    const dlvChkValue = attributes.fighting >= 12 ? 'INJ G' : 'INJ P';
+    
+    const rcvChkValuesForInjP = [0, 1, 4, 5, 8, 9];
+    const rcvChkValue = rcvChkValuesForInjP.includes(attributes.fighting) ? 'INJ P' : 'INJ G';
+
     const isLightweight = attributes.weight <= 5;
     const isHeavyweight = attributes.weight >= 10;
 
@@ -336,8 +341,8 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                     <AttributeCategory title="Misc" value1={attributes.endurance} value2={fightingHeaderValue}>
                                         <AttributeBar label="Endurance" value={attributes.endurance} />
                                         <AttributeBar label="Fighting" value={fightingDisplayValue} max={7} />
-                                        <AttributeText label="DLV CHK" value={injuryValue} fullName="Injury (Delivering Check)" />
-                                        <AttributeText label="RCV CHK" value={injuryValue} fullName="Injury (Receiving Check)" />
+                                        <AttributeText label="DLV CHK" value={dlvChkValue} fullName="Injury (Delivering Check)" />
+                                        <AttributeText label="RCV CHK" value={rcvChkValue} fullName="Injury (Receiving Check)" />
                                     </AttributeCategory>
                                 </div>
                             </>
