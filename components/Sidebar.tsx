@@ -137,10 +137,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </ul>
             </nav>
 
-            <div className="p-4 mt-auto border-t border-black/30">
+            <div className="py-4 mt-auto border-t border-black/30">
                 <button
                     onClick={onExit}
-                    className="flex items-center w-full px-4 py-3 transition-colors hover:bg-red-800/50 rounded-md"
+                    className="flex items-center w-full px-4 py-3 transition-colors hover:bg-red-800/50"
                     title={isCollapsed ? "Exit / Reset App" : undefined}
                 >
                     <PowerIcon className="w-6 h-6 text-red-500 shrink-0" />
