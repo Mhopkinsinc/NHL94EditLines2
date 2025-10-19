@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo } from 'react';
 import type { Player } from '../types';
 import { AnchorIcon, FeatherIcon, HospitalIcon } from './icons';
@@ -204,6 +205,8 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                         </h2>
                         <div className="flex items-center gap-2">
                             <p className="text-gray-400 font-semibold">{player.role}</p>
+                            {!isGoalie && isHeavyweight && player.statusIcon !== 'anchor' && <AnchorIcon className="w-5 h-5 text-white" title="Heavyweight" />}
+                            {!isGoalie && isLightweight && <FeatherIcon className="w-5 h-5 text-white" title="Lightweight" />}
                             {isInjuredForGame && <HospitalIcon className="w-5 h-5 text-white" title="Game Injury Prone" />}
                         </div>
                     </div>
