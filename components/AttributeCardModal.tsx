@@ -174,7 +174,9 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
 
     const isLightweight = attributes.weight <= 5;
     const isHeavyweight = attributes.weight >= 10;
-
+    
+    const isPassBiased = attributes.roughness < 3;
+    const isShotBiased = attributes.roughness > 3;
 
     return (
         <div 
@@ -303,7 +305,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                     </AttributeCategory>
                                     <AttributeCategory title="Pass/Shot Bias" value1={attributes.roughness}>
                                         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2">
-                                            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Pass</span>
+                                            <span className={`text-xs uppercase tracking-wider font-semibold ${isPassBiased ? 'text-white animate-pulse' : 'text-gray-400'}`}>Pass</span>
                                             <div className="relative justify-self-center" style={{ width: '58px', height: '1rem' }}>
                                                 <div className="absolute inset-0 flex items-center justify-center gap-0.5">
                                                     {Array.from({ length: 6 }).map((_, i) => {
@@ -324,7 +326,7 @@ export const AttributeCardModal: React.FC<AttributeCardModalProps> = ({ player, 
                                                     />
                                                 )}
                                             </div>
-                                            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Shot</span>
+                                            <span className={`text-xs uppercase tracking-wider font-semibold ${isShotBiased ? 'text-white animate-pulse' : 'text-gray-400'}`}>Shot</span>
                                         </div>
                                     </AttributeCategory>
                                 </div>
