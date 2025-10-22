@@ -127,20 +127,20 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
     };
     
     const headerGroups = [
-        { label: 'Name', key: 'name' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'Team', key: 'teamAbv' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'Glove Hand', key: 'handed' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'Overall', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100' },
-        { label: 'Weight', key: 'weight' as SortableKeys, color: 'bg-slate-800' },
-        { label: 'Speed', key: 'speed' as SortableKeys, color: 'bg-green-800/50' },
-        { label: 'Agility', key: 'agility' as SortableKeys, color: 'bg-green-800/50' },
-        { label: 'Puck Control', key: 'shtpower' as SortableKeys, color: 'bg-sky-800/50' },
-        { label: 'Def Aware', key: 'dawareness' as SortableKeys, color: 'bg-sky-800/50' },
-        { label: 'Stick Left', key: 'roughness' as SortableKeys, color: 'bg-purple-800/50' },
-        { label: 'Glove Right', key: 'passacc' as SortableKeys, color: 'bg-purple-800/50' },
-        { label: 'Stick Right', key: 'endurance' as SortableKeys, color: 'bg-purple-800/50' },
-        { label: 'Glove Left', key: 'aggressiveness' as SortableKeys, color: 'bg-purple-800/50' },
-        { label: 'Total Stick/Glove', key: 'totalStickGlove' as SortableKeys, color: 'bg-slate-700' },
+        { label: 'Name', key: 'name' as SortableKeys, color: 'bg-slate-700', fullName: 'Player Name' },
+        { label: 'Team', key: 'teamAbv' as SortableKeys, color: 'bg-slate-700', fullName: 'Team' },
+        { label: 'Hand', key: 'handed' as SortableKeys, color: 'bg-slate-700', fullName: 'Glove Hand' },
+        { label: 'OVR', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100', fullName: 'Overall' },
+        { label: 'WT', key: 'weight' as SortableKeys, color: 'bg-slate-800', fullName: 'Weight' },
+        { label: 'SPD', key: 'speed' as SortableKeys, color: 'bg-green-800/50', fullName: 'Speed' },
+        { label: 'AGL', key: 'agility' as SortableKeys, color: 'bg-green-800/50', fullName: 'Agility' },
+        { label: 'PCK', key: 'shtpower' as SortableKeys, color: 'bg-sky-800/50', fullName: 'Puck Control' },
+        { label: 'DAW', key: 'dawareness' as SortableKeys, color: 'bg-sky-800/50', fullName: 'Defensive Awareness' },
+        { label: 'STL', key: 'roughness' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Stick Left' },
+        { label: 'GLR', key: 'passacc' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Glove Right' },
+        { label: 'STR', key: 'endurance' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Stick Right' },
+        { label: 'GLL', key: 'aggressiveness' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Glove Left' },
+        { label: 'TOT S/G', key: 'totalStickGlove' as SortableKeys, color: 'bg-slate-700', fullName: 'Total Stick/Glove' },
     ];
 
     const SortIcon = ({ columnKey }: { columnKey: SortableKeys }) => {
@@ -179,7 +179,7 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
                                         scope="col"
                                         className={`px-3 py-2 text-left text-xs font-bold text-gray-300 uppercase tracking-wider ${header.color}`}
                                     >
-                                        <button onClick={() => handleSort(header.key)} className="flex items-center gap-1 w-full">
+                                        <button onClick={() => handleSort(header.key)} className="flex items-center gap-1 w-full" title={`Sort by ${header.fullName}`}>
                                             <span>{header.label}</span>
                                             <SortIcon columnKey={header.key} />
                                         </button>

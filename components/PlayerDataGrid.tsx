@@ -136,21 +136,21 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
     };
     
     const headerGroups = [
-        { label: 'Name', key: 'name' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'Team', key: 'teamAbv' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'Pos', key: 'position' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'Hand', key: 'handed' as SortableKeys, color: 'bg-slate-700' },
-        { label: 'OVR', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100' },
-        { label: 'WT', key: 'weight' as SortableKeys, color: 'bg-slate-800' },
-        { label: 'CHK', key: 'checking' as SortableKeys, color: 'bg-slate-800' },
-        { label: 'SHP', key: 'shtpower' as SortableKeys, color: 'bg-red-800/50' },
-        { label: 'SHA', key: 'shtacc' as SortableKeys, color: 'bg-red-800/50' },
-        { label: 'SPD', key: 'speed' as SortableKeys, color: 'bg-green-800/50' },
-        { label: 'AGL', key: 'agility' as SortableKeys, color: 'bg-green-800/50' },
-        { label: 'STK', key: 'stickhand' as SortableKeys, color: 'bg-purple-800/50' },
-        { label: 'PAS', key: 'passacc' as SortableKeys, color: 'bg-purple-800/50' },
-        { label: 'OAW', key: 'oawareness' as SortableKeys, color: 'bg-sky-800/50' },
-        { label: 'DAW', key: 'dawareness' as SortableKeys, color: 'bg-sky-800/50' },
+        { label: 'Name', key: 'name' as SortableKeys, color: 'bg-slate-700', fullName: 'Player Name' },
+        { label: 'Team', key: 'teamAbv' as SortableKeys, color: 'bg-slate-700', fullName: 'Team' },
+        { label: 'Pos', key: 'position' as SortableKeys, color: 'bg-slate-700', fullName: 'Position' },
+        { label: 'Hand', key: 'handed' as SortableKeys, color: 'bg-slate-700', fullName: 'Handedness' },
+        { label: 'OVR', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100', fullName: 'Overall' },
+        { label: 'WT', key: 'weight' as SortableKeys, color: 'bg-slate-800', fullName: 'Weight' },
+        { label: 'CHK', key: 'checking' as SortableKeys, color: 'bg-slate-800', fullName: 'Checking' },
+        { label: 'SHP', key: 'shtpower' as SortableKeys, color: 'bg-red-800/50', fullName: 'Shot Power' },
+        { label: 'SHA', key: 'shtacc' as SortableKeys, color: 'bg-red-800/50', fullName: 'Shot Accuracy' },
+        { label: 'SPD', key: 'speed' as SortableKeys, color: 'bg-green-800/50', fullName: 'Speed' },
+        { label: 'AGL', key: 'agility' as SortableKeys, color: 'bg-green-800/50', fullName: 'Agility' },
+        { label: 'STK', key: 'stickhand' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Stick Handling' },
+        { label: 'PAS', key: 'passacc' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Passing Accuracy' },
+        { label: 'OAW', key: 'oawareness' as SortableKeys, color: 'bg-sky-800/50', fullName: 'Offensive Awareness' },
+        { label: 'DAW', key: 'dawareness' as SortableKeys, color: 'bg-sky-800/50', fullName: 'Defensive Awareness' },
     ];
     
     const getCellColor = (index: number): string => {
@@ -206,7 +206,7 @@ export const PlayerDataGrid: React.FC<PlayerDataGridProps> = ({ teams }) => {
                                         scope="col"
                                         className={`px-2 py-2 text-left text-xs font-bold text-gray-300 uppercase tracking-wider ${header.color}`}
                                     >
-                                        <button onClick={() => handleSort(header.key)} className="flex items-center gap-1 w-full">
+                                        <button onClick={() => handleSort(header.key)} className="flex items-center gap-1 w-full" title={`Sort by ${header.fullName}`}>
                                             <span>{header.label}</span>
                                             <SortIcon columnKey={header.key} />
                                         </button>
