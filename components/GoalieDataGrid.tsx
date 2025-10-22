@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import type { TeamInfo } from '../rom-parser';
 import type { Player } from '../types';
 import { calculateGoalieOverall } from '../utils';
-import { ChevronUpIcon, ChevronDownIcon, ChevronUpDownIcon } from './icons';
+import { ChevronUpIcon, ChevronDownIcon, ChevronUpDownIcon, ArrowDownTrayIcon } from './icons';
 
 interface GoalieDataGridProps {
     teams: TeamInfo[];
@@ -40,6 +40,23 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
+
+    const headerGroups = [
+        { label: 'Name', key: 'name' as SortableKeys, color: 'bg-slate-700', fullName: 'Player Name' },
+        { label: 'Team', key: 'teamAbv' as SortableKeys, color: 'bg-slate-700', fullName: 'Team' },
+        { label: 'Hand', key: 'handed' as SortableKeys, color: 'bg-slate-700', fullName: 'Glove Hand' },
+        { label: 'OVR', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100', fullName: 'Overall' },
+        { label: 'WT', key: 'weight' as SortableKeys, color: 'bg-slate-800', fullName: 'Weight' },
+        { label: 'SPD', key: 'speed' as SortableKeys, color: 'bg-green-800/50', fullName: 'Speed' },
+        { label: 'AGL', key: 'agility' as SortableKeys, color: 'bg-green-800/50', fullName: 'Agility' },
+        { label: 'PCK', key: 'shtpower' as SortableKeys, color: 'bg-sky-800/50', fullName: 'Puck Control' },
+        { label: 'DAW', key: 'dawareness' as SortableKeys, color: 'bg-sky-800/50', fullName: 'Defensive Awareness' },
+        { label: 'STL', key: 'roughness' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Stick Left' },
+        { label: 'GLR', key: 'passacc' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Glove Right' },
+        { label: 'STR', key: 'endurance' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Stick Right' },
+        { label: 'GLL', key: 'aggressiveness' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Glove Left' },
+        { label: 'TOT S/G', key: 'totalStickGlove' as SortableKeys, color: 'bg-slate-700', fullName: 'Total Stick/Glove' },
+    ];
 
     const sortedGoalies = useMemo(() => {
         const goalies: GoalieData[] = teams
@@ -126,22 +143,59 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
         });
     };
     
-    const headerGroups = [
-        { label: 'Name', key: 'name' as SortableKeys, color: 'bg-slate-700', fullName: 'Player Name' },
-        { label: 'Team', key: 'teamAbv' as SortableKeys, color: 'bg-slate-700', fullName: 'Team' },
-        { label: 'Hand', key: 'handed' as SortableKeys, color: 'bg-slate-700', fullName: 'Glove Hand' },
-        { label: 'OVR', key: 'overall' as SortableKeys, color: 'bg-sky-700 text-sky-100', fullName: 'Overall' },
-        { label: 'WT', key: 'weight' as SortableKeys, color: 'bg-slate-800', fullName: 'Weight' },
-        { label: 'SPD', key: 'speed' as SortableKeys, color: 'bg-green-800/50', fullName: 'Speed' },
-        { label: 'AGL', key: 'agility' as SortableKeys, color: 'bg-green-800/50', fullName: 'Agility' },
-        { label: 'PCK', key: 'shtpower' as SortableKeys, color: 'bg-sky-800/50', fullName: 'Puck Control' },
-        { label: 'DAW', key: 'dawareness' as SortableKeys, color: 'bg-sky-800/50', fullName: 'Defensive Awareness' },
-        { label: 'STL', key: 'roughness' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Stick Left' },
-        { label: 'GLR', key: 'passacc' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Glove Right' },
-        { label: 'STR', key: 'endurance' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Stick Right' },
-        { label: 'GLL', key: 'aggressiveness' as SortableKeys, color: 'bg-purple-800/50', fullName: 'Glove Left' },
-        { label: 'TOT S/G', key: 'totalStickGlove' as SortableKeys, color: 'bg-slate-700', fullName: 'Total Stick/Glove' },
-    ];
+    const handleExportCSV = () => {
+        if (sortedGoalies.length === 0) return;
+
+        const escapeCSV = (field: string | number): string => {
+            const strField = String(field);
+            let escaped = strField.replace(/"/g, '""'); // Escape double quotes
+            if (strField.includes(',') || strField.includes('"') || strField.includes('\n') || strField.includes('\r')) {
+                escaped = `"${escaped}"`;
+            }
+            return escaped;
+        };
+
+        const headers = headerGroups.map(h => escapeCSV(h.fullName || h.label));
+
+        const rows = sortedGoalies.map(player => {
+            return headerGroups.map(header => {
+                // FIX: Use a type-safe approach to retrieve player values for CSV export.
+                // This ensures that the `value` variable is always a string or number, resolving the type error.
+                let value: string | number;
+                const { key } = header;
+
+                switch (key) {
+                    case 'name':
+                    case 'teamAbv':
+                    case 'overall':
+                    case 'totalStickGlove':
+                        value = player[key];
+                        break;
+                    default:
+                        value = player.attributes[key as keyof Player['attributes']];
+                        break;
+                }
+
+                if (header.key === 'handed') {
+                    value = value === 0 ? 'Lefty' : 'Righty';
+                }
+                return escapeCSV(value);
+            }).join(',');
+        });
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "nhl94-goalies.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
 
     const SortIcon = ({ columnKey }: { columnKey: SortableKeys }) => {
         if (sortConfig.key !== columnKey) {
@@ -157,15 +211,27 @@ export const GoalieDataGrid: React.FC<GoalieDataGridProps> = ({ teams }) => {
         <div className="bg-[#2B3544] p-4 rounded-lg">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Goalie Data</h2>
-                <div className="relative">
-                     <input 
-                        type="text"
-                        placeholder="Search goalies..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-64 p-1.5 pl-4"
-                        aria-label="Search goalies by name"
-                    />
+                <div className="flex items-center gap-2">
+                    <div className="relative">
+                         <input 
+                            type="text"
+                            placeholder="Search goalies..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-64 p-1.5 pl-4"
+                            aria-label="Search goalies by name"
+                        />
+                    </div>
+                     <button
+                        onClick={handleExportCSV}
+                        disabled={sortedGoalies.length === 0}
+                        className="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-semibold py-1.5 px-3 rounded-md transition-colors flex items-center gap-2"
+                        aria-label="Export data to CSV"
+                        title={sortedGoalies.length > 0 ? "Export data to CSV" : "No data to export"}
+                    >
+                        <ArrowDownTrayIcon className="w-5 h-5" />
+                        Export
+                    </button>
                 </div>
             </div>
             <div className="border border-gray-700 rounded-lg overflow-auto relative max-h-[60vh]">
