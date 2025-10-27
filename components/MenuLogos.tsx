@@ -14,11 +14,16 @@ type BaseOffsets = {
     [K in keyof ImageOffsets]: string;
 };
 
+interface PaletteColor {
+    rgb: [number, number, number];
+    hex: string;
+}
+
 interface ProcessedTeamData extends ImageOffsets {
     teamName: string;
-    logoPalette: string[];
-    homePalette: string[];
-    visitorPalette: string[];
+    logoPalette: PaletteColor[];
+    homePalette: PaletteColor[];
+    visitorPalette: PaletteColor[];
     rinkLogoUrl: string;
     teamLogoUrl: string;
     bannerUrl: string;
@@ -27,19 +32,19 @@ interface ProcessedTeamData extends ImageOffsets {
 // --- Image & Palette Parsing Logic ---
 
 /**
- * Parses 9-bit Sega Genesis palette data into an array of [r, g, b] tuples.
+ * Parses 9-bit Sega Genesis palette data into an array of {rgb: [r, g, b], hex: string} objects.
  * @param buffer The ROM ArrayBuffer.
  * @param offset The starting offset of the palette data.
  * @param numColors The number of colors in the palette (usually 16).
- * @returns An array of [r, g, b] color tuples.
+ * @returns An array of color objects.
  */
-const parseGenesisPaletteRGB = (buffer: ArrayBuffer, offset: number, numColors: number): [number, number, number][] => {
+const parseGenesisPaletteRGB = (buffer: ArrayBuffer, offset: number, numColors: number): PaletteColor[] => {
     if (offset + numColors * 2 > buffer.byteLength || offset < 0) {
         // Return a default gray palette if offset is invalid to avoid crashes
-        return Array(numColors).fill([128, 128, 128]);
+        return Array(numColors).fill({ rgb: [128, 128, 128], hex: '0x0888' });
     }
     const view = new DataView(buffer);
-    const colors: [number, number, number][] = [];
+    const colors: PaletteColor[] = [];
 
     for (let i = 0; i < numColors; i++) {
         const word = view.getUint16(offset + i * 2, false); // big-endian
@@ -52,11 +57,15 @@ const parseGenesisPaletteRGB = (buffer: ArrayBuffer, offset: number, numColors: 
         const r8 = (r << 5) | (r << 2) | (r >> 1);
         const g8 = (g << 5) | (g << 2) | (g >> 1);
         const b8 = (b << 5) | (b << 2) | (b >> 1);
-
-        colors.push([r8, g8, b8]);
+        
+        colors.push({
+            rgb: [r8, g8, b8],
+            hex: `0x${word.toString(16).toUpperCase().padStart(4, '0')}`
+        });
     }
     return colors;
 };
+
 
 /**
  * Parses 4-bit-per-pixel tile data from a Uint8Array.
@@ -151,12 +160,13 @@ function createPngFromTiles(tiles: number[][][], palette: [number, number, numbe
 
 // --- React Components ---
 
-const PaletteDisplay: React.FC<{ title: string; colors: string[] }> = ({ title, colors }) => (
+const PaletteDisplay: React.FC<{ title: string; colors: PaletteColor[] }> = ({ title, colors }) => (
     <div>
         <h4 className="text-sm font-semibold text-gray-400 mt-2">{title}</h4>
         <div className="flex flex-wrap gap-1 mt-1">
             {colors.map((color, index) => {
                 const isTransparent = index === 0;
+                const rgbString = `rgb(${color.rgb.join(',')})`;
                 return (
                     <div 
                         key={index} 
@@ -165,14 +175,15 @@ const PaletteDisplay: React.FC<{ title: string; colors: string[] }> = ({ title, 
                             backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)',
                             backgroundSize: '8px 8px',
                             backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
-                        } : { backgroundColor: color }}
-                        title={isTransparent ? 'Transparent' : color}
+                        } : { backgroundColor: rgbString }}
+                        title={isTransparent ? 'Transparent' : `${rgbString} - ${color.hex}`}
                     />
                 );
             })}
         </div>
     </div>
 );
+
 
 const AssetDisplay: React.FC<{ title: string; offset: number; imageUrl: string }> = ({ title, offset, imageUrl }) => (
     <div className="mt-4">
@@ -208,9 +219,10 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             const banoffset = parseInt(baseOffsets.banoffset, 16) + increments.banoffset * count;
             const hvpaloffset = parseInt(baseOffsets.hvpaloffset, 16) + increments.hvpaloffset * count;
 
-            const logoPaletteRGB = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
-            const toPaletteString = (rgb: [number,number,number][]) => rgb.map(c => `rgb(${c[0]},${c[1]},${c[2]})`);
-
+            const logoPaletteData = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
+            const homePaletteData = parseGenesisPaletteRGB(romBuffer, hvpaloffset, 16);
+            const visitorPaletteData = parseGenesisPaletteRGB(romBuffer, hvpaloffset + 32, 16);
+            
             // Extract tile data based on offsets and known sizes
             const rinkLogoTiles = parseTiles(new Uint8Array(romBuffer, rloffset, imageByteSizes.rinkLogo));
             const teamLogoTiles = parseTiles(new Uint8Array(romBuffer, tloffset, imageByteSizes.teamLogo));
@@ -219,12 +231,12 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             newImgoffsets.push({
                 teamName: teams[count] ? `${teams[count].city} ${teams[count].name}` : `Team ${count + 1}`,
                 rloffset, tloffset, lpoffset, banoffset, hvpaloffset,
-                logoPalette: toPaletteString(logoPaletteRGB),
-                homePalette: toPaletteString(parseGenesisPaletteRGB(romBuffer, hvpaloffset, 16)),
-                visitorPalette: toPaletteString(parseGenesisPaletteRGB(romBuffer, hvpaloffset + 32, 16)),
-                rinkLogoUrl: createPngFromTiles(rinkLogoTiles, logoPaletteRGB, 6), // 48px width -> 6 tiles
-                teamLogoUrl: createPngFromTiles(teamLogoTiles, logoPaletteRGB, 6), // 48px width -> 6 tiles
-                bannerUrl: createPngFromTiles(bannerTiles, logoPaletteRGB, 11), // 88px width -> 11 tiles
+                logoPalette: logoPaletteData,
+                homePalette: homePaletteData,
+                visitorPalette: visitorPaletteData,
+                rinkLogoUrl: createPngFromTiles(rinkLogoTiles, logoPaletteData.map(c => c.rgb), 6), // 48px width -> 6 tiles
+                teamLogoUrl: createPngFromTiles(teamLogoTiles, logoPaletteData.map(c => c.rgb), 6), // 48px width -> 6 tiles
+                bannerUrl: createPngFromTiles(bannerTiles, logoPaletteData.map(c => c.rgb), 11), // 88px width -> 11 tiles
             });
         }
         
