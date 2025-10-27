@@ -18,6 +18,7 @@ import { WelcomeAnimation } from './components/WelcomeAnimation';
 import Sidebar from './components/Sidebar';
 import { PlayerDataGrid } from './components/PlayerDataGrid';
 import { GoalieDataGrid } from './components/GoalieDataGrid';
+import { MenuLogos } from './components/MenuLogos';
 
 type DragSource =
   | { type: 'FORWARD_LINE'; lineIndex: number; position: 'LW' | 'C' | 'RW' | 'EX' }
@@ -1228,8 +1229,8 @@ const App: React.FC = () => {
                   <PlayerDataGrid teams={romInfo.teams} />
                 ) : activeView === 'player-data-goalies' && romInfo ? (
                   <GoalieDataGrid teams={romInfo.teams} />
-                ) : activeView === 'assets-menu-logos' ? (
-                  <Placeholder text="Menu Logos View" />
+                ) : activeView === 'assets-menu-logos' && romInfo ? (
+                  <MenuLogos romBuffer={romBuffer} teams={romInfo.teams} numberOfTeams={romInfo.data.numberOfTeams} />
                 ) : (
                   <Placeholder text={`${activeView.charAt(0).toUpperCase() + activeView.slice(1).replace('-',' ')} View`} />
                 )}
