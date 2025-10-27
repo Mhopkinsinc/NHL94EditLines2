@@ -1228,6 +1228,8 @@ const App: React.FC = () => {
                   <PlayerDataGrid teams={romInfo.teams} />
                 ) : activeView === 'player-data-goalies' && romInfo ? (
                   <GoalieDataGrid teams={romInfo.teams} />
+                ) : activeView === 'assets-menu-logos' ? (
+                  <Placeholder text="Menu Logos View" />
                 ) : (
                   <Placeholder text={`${activeView.charAt(0).toUpperCase() + activeView.slice(1).replace('-',' ')} View`} />
                 )}

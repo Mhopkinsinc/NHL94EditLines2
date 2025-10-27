@@ -7,6 +7,7 @@ import {
     QuestionMarkCircleIcon,
     PowerIcon,
     ChevronDownIcon,
+    Squares2x2Icon,
 } from './icons';
 
 interface SidebarProps {
@@ -28,7 +29,15 @@ const navItems = [
             { id: 'player-data-goalies', label: 'Goalies' },
             { id: 'player-data-analysis', label: 'Analysis' },
         ]
-    },    
+    },
+    { 
+        id: 'assets', 
+        label: 'Assets', 
+        icon: Squares2x2Icon,
+        children: [
+            { id: 'assets-menu-logos', label: 'Menu Logos' },
+        ]
+    },
     { id: 'settings', label: 'Settings', icon: Cog6ToothIcon },
     { id: 'help', label: 'Help', icon: QuestionMarkCircleIcon },
 ];
@@ -40,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     onNavigate,
     onExit,
 }) => {
-    const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['player-data']));
+    const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['player-data', 'assets']));
 
     const handleParentClick = (id: string) => {
         if (isCollapsed) {
