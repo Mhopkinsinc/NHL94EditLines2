@@ -7,11 +7,15 @@ interface ImageOffsets {
     tloffset: number;
     lpoffset: number;
     banoffset: number;
-    hvpaloffset: number;
+    homePaletteOffset: number; // from team data
+    awayPaletteOffset: number; // from team data
 }
 
 type BaseOffsets = {
-    [K in keyof ImageOffsets]: string;
+    rloffset: string;
+    tloffset: string;
+    lpoffset: string;
+    banoffset: string;
 };
 
 interface PaletteColor {
@@ -54,6 +58,36 @@ const parseGenesisPaletteRGB = (buffer: ArrayBuffer, offset: number, numColors: 
         const r = (word >> 1) & 0x7;
 
         // Convert 3-bit color component (0-7) to 8-bit (0-255) using bit replication
+        const r8 = (r << 5) | (r << 2) | (r >> 1);
+        const g8 = (g << 5) | (g << 2) | (g >> 1);
+        const b8 = (b << 5) | (b << 2) | (b >> 1);
+        
+        colors.push({
+            rgb: [r8, g8, b8],
+            hex: `0x${word.toString(16).toUpperCase().padStart(4, '0')}`
+        });
+    }
+    return colors;
+};
+
+/**
+ * Parses 9-bit Sega Genesis palette data from a Uint8Array into an array of color objects.
+ * @param paletteBytes The raw byte data for the palette (e.g., a 32-byte Uint8Array for 16 colors).
+ * @returns An array of color objects.
+ */
+const parsePaletteFromBytes = (paletteBytes: Uint8Array): PaletteColor[] => {
+    const numColors = paletteBytes.length / 2;
+    // Create a DataView on the Uint8Array's buffer, respecting its offset and length
+    const view = new DataView(paletteBytes.buffer, paletteBytes.byteOffset, paletteBytes.byteLength);
+    const colors: PaletteColor[] = [];
+
+    for (let i = 0; i < numColors; i++) {
+        if ((i * 2) + 2 > view.byteLength) break;
+        const word = view.getUint16(i * 2, false); // big-endian
+        const b = (word >> 9) & 0x7;
+        const g = (word >> 5) & 0x7;
+        const r = (word >> 1) & 0x7;
+
         const r8 = (r << 5) | (r << 2) | (r >> 1);
         const g8 = (g << 5) | (g << 2) | (g >> 1);
         const b8 = (b << 5) | (b << 2) | (b >> 1);
@@ -206,10 +240,10 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         const newImgoffsets: ProcessedTeamData[] = [];
 
         const baseOffsets: BaseOffsets = romtype === 32
-            ? { rloffset: '1E317E', tloffset: '1D38B0', lpoffset: '1D34A6', banoffset: '1DD370', hvpaloffset: '1D1B0A' }
-            : { rloffset: '1D6F02', tloffset: '1C85B8', lpoffset: '1C81EE', banoffset: '1D16CC', hvpaloffset: '1C6982' };
+            ? { rloffset: '1E317E', tloffset: '1D38B0', lpoffset: '1D34A6', banoffset: '1DD370' }
+            : { rloffset: '1D6F02', tloffset: '1C85B8', lpoffset: '1C81EE', banoffset: '1D16CC' };
 
-        const increments = { rloffset: 0x30A, tloffset: 0x4D6, lpoffset: 0x20, banoffset: 0x2C0, hvpaloffset: 0x40 };
+        const increments = { rloffset: 0x30A, tloffset: 0x4D6, lpoffset: 0x20, banoffset: 0x2C0 };
         const imageByteSizes = { rinkLogo: 0x300, teamLogo: 0x480, banner: 0x2C0 }; // Approximate byte sizes for tiles
 
         for (let count = 0; count < teamcnt; count++) {
@@ -217,11 +251,14 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             const tloffset = parseInt(baseOffsets.tloffset, 16) + increments.tloffset * count;
             const lpoffset = parseInt(baseOffsets.lpoffset, 16) + increments.lpoffset * count;
             const banoffset = parseInt(baseOffsets.banoffset, 16) + increments.banoffset * count;
-            const hvpaloffset = parseInt(baseOffsets.hvpaloffset, 16) + increments.hvpaloffset * count;
 
             const logoPaletteData = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
-            const homePaletteData = parseGenesisPaletteRGB(romBuffer, hvpaloffset, 16);
-            const visitorPaletteData = parseGenesisPaletteRGB(romBuffer, hvpaloffset + 32, 16);
+
+            const teamData = teams[count];
+            const homePaletteData = teamData ? parsePaletteFromBytes(teamData.homePalette) : [];
+            const visitorPaletteData = teamData ? parsePaletteFromBytes(teamData.awayPalette) : [];
+            const homePaletteOffset = teamData ? teamData.teamPointer + 12 : 0;
+            const awayPaletteOffset = teamData ? teamData.teamPointer + 44 : 0;
             
             // Extract tile data based on offsets and known sizes
             const rinkLogoTiles = parseTiles(new Uint8Array(romBuffer, rloffset, imageByteSizes.rinkLogo));
@@ -229,14 +266,15 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             const bannerTiles = parseTiles(new Uint8Array(romBuffer, banoffset, imageByteSizes.banner));
 
             newImgoffsets.push({
-                teamName: teams[count] ? `${teams[count].city} ${teams[count].name}` : `Team ${count + 1}`,
-                rloffset, tloffset, lpoffset, banoffset, hvpaloffset,
+                teamName: teamData ? `${teamData.city} ${teamData.name}` : `Team ${count + 1}`,
+                rloffset, tloffset, lpoffset, banoffset,
+                homePaletteOffset, awayPaletteOffset,
                 logoPalette: logoPaletteData,
                 homePalette: homePaletteData,
                 visitorPalette: visitorPaletteData,
-                rinkLogoUrl: createPngFromTiles(rinkLogoTiles, logoPaletteData.map(c => c.rgb), 6), // 48px width -> 6 tiles
+                rinkLogoUrl: createPngFromTiles(rinkLogoTiles, homePaletteData.map(c => c.rgb), 6), // 48px width -> 6 tiles
                 teamLogoUrl: createPngFromTiles(teamLogoTiles, logoPaletteData.map(c => c.rgb), 6), // 48px width -> 6 tiles
-                bannerUrl: createPngFromTiles(bannerTiles, logoPaletteData.map(c => c.rgb), 11), // 88px width -> 11 tiles
+                bannerUrl: createPngFromTiles(bannerTiles, homePaletteData.map(c => c.rgb), 11), // 88px width -> 11 tiles
             });
         }
         
@@ -268,8 +306,8 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
 
                          <div className="mt-3 border-t border-gray-700 pt-3">
                             <PaletteDisplay title={`Logo Palette (0x${data.lpoffset.toString(16).toUpperCase()})`} colors={data.logoPalette} />
-                            <PaletteDisplay title={`Home Palette (0x${data.hvpaloffset.toString(16).toUpperCase()})`} colors={data.homePalette} />
-                            <PaletteDisplay title={`Away Palette (0x${(data.hvpaloffset + 32).toString(16).toUpperCase()})`} colors={data.visitorPalette} />
+                            <PaletteDisplay title={`Home Jersey Palette (0x${data.homePaletteOffset.toString(16).toUpperCase()})`} colors={data.homePalette} />
+                            <PaletteDisplay title={`Away Jersey Palette (0x${data.awayPaletteOffset.toString(16).toUpperCase()})`} colors={data.visitorPalette} />
                         </div>
                     </div>
                 ))}
