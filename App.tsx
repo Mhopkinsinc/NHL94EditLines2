@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 // FIX: Import `DriveStep` to correctly type the tour steps array, resolving a type incompatibility.
 import { driver, type DriveStep } from 'driver.js';
@@ -1009,71 +1010,74 @@ const App: React.FC = () => {
           <main className="flex-1 overflow-y-auto">
             <div className="p-4 md:p-8">
               <div className="max-w-7xl mx-auto">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                  {/* Team selector section, only visible on roster-editor view */}
+                  <div className="flex items-center gap-2">
+                    {activeView === 'roster-editor' && (
+                      <>
+                        <label htmlFor="team-selector" className="font-bold text-gray-400 text-lg">
+                          Team
+                        </label>
+                        <div id="tour-step-1">
+                          <TeamSelector
+                            teams={availableTeams}
+                            selectedTeamName={selectedTeamName}
+                            onTeamChange={handleTeamChange}
+                            disabled={!romInfo}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Action buttons, always visible */}
+                  <div className="flex items-center gap-2">
+                    <button
+                        id="tour-step-2"
+                        onClick={() => handleSaveChanges()}
+                        className={`bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5 ${isDirty ? 'animate-pulse' : ''}`}
+                        disabled={!isDirty}
+                        title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
+                    >
+                        <SaveIcon className="w-4 h-4" />
+                        Save ROM
+                    </button>
+                    <>
+                        <button
+                            id="tour-step-4"
+                            onClick={handleOpenRomInfoModal}
+                            className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
+                            aria-label="Show ROM Information"
+                            title="Click this icon to view detailed information about the loaded ROM"
+                        >
+                            <EASportsLogo className="w-5 h-5" />
+                        </button>
+                        <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
+                              <button
+                                id="tour-step-3"
+                                onClick={handleOpenHistoryModal}
+                                className={`bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed ${isDirty ? 'animate-pulse' : ''}`}
+                                aria-label="Show Change History"
+                                disabled={historyLog.length === 0}
+                                title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
+                            >
+                                <HistoryIcon className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={handleResetApp}
+                                className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
+                                aria-label="Unload ROM and start over"
+                                title="Unload ROM and start over"
+                            >
+                                <ResetIcon className="w-5 h-5 text-red-500" />
+                            </button>
+                        </div>
+                    </>
+                  </div>
+                </div>
+
                 {activeView === 'roster-editor' ? (
                   <>
-                  <div className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 items-center">
-                    {/* Controls Row */}
-                    <div className="flex justify-center items-center h-full font-bold text-gray-400 text-lg">
-                      Team
-                    </div>
-                    
-                    <div id="tour-step-1">
-                      <TeamSelector 
-                        teams={availableTeams} 
-                        selectedTeamName={selectedTeamName} 
-                        onTeamChange={handleTeamChange}
-                        disabled={!romInfo}
-                      />
-                    </div>
-
-                    <div className="col-span-2 md:col-span-3 md:col-start-3 flex items-center justify-end">
-                      <div className="flex items-center gap-2">
-                        <button
-                            id="tour-step-2"
-                            onClick={() => handleSaveChanges()}
-                            className={`bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-1 px-3 text-sm rounded-md transition-colors flex items-center gap-1.5 ${isDirty ? 'animate-pulse' : ''}`}
-                            disabled={!isDirty}
-                            title={isDirty ? "Save all changes to a new ROM file" : "No changes to save"}
-                        >
-                            <SaveIcon className="w-4 h-4" />
-                            Save ROM
-                        </button>
-                        <>
-                            <button
-                                id="tour-step-4"
-                                onClick={handleOpenRomInfoModal}
-                                className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
-                                aria-label="Show ROM Information"
-                                title="Click this icon to view detailed information about the loaded ROM"
-                            >
-                                <EASportsLogo className="w-5 h-5" />
-                            </button>
-                            <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
-                                  <button
-                                    id="tour-step-3"
-                                    onClick={handleOpenHistoryModal}
-                                    className={`bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed ${isDirty ? 'animate-pulse' : ''}`}
-                                    aria-label="Show Change History"
-                                    disabled={historyLog.length === 0}
-                                    title={historyLog.length > 0 ? "Show change history" : "No changes made yet"}
-                                >
-                                    <HistoryIcon className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={handleResetApp}
-                                    className="bg-gray-700 hover:bg-gray-600 p-1.5 rounded-md transition-colors"
-                                    aria-label="Unload ROM and start over"
-                                    title="Unload ROM and start over"
-                                >
-                                    <ResetIcon className="w-5 h-5 text-red-500" />
-                                </button>
-                            </div>
-                        </>
-                      </div>
-                    </div>
-                    
-                    <div className="col-span-full h-2" />
-                  </div>
                     {lineup.roster.length === 0 ? (
                       <div className="text-center py-20 bg-[#2B3544] rounded-lg mt-4">
                           <h2 className="text-2xl font-bold mb-4">No Team Selected</h2>
