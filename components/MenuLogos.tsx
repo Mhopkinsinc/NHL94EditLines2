@@ -319,9 +319,6 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             
             const logoPaletteData = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
             const homeBannerPaletteData = parseGenesisPaletteRGB(romBuffer, homeBannerPaletteOffset, 16);
-            
-            if (homeBannerPaletteData.length > 5) { homeBannerPaletteData[5] = { rgb: [255, 255, 255], hex: '0x0EEE' }; }
-            if (homeBannerPaletteData.length > 6) { homeBannerPaletteData[6] = { rgb: [0, 0, 0], hex: '0x0000' }; }
 
             const teamData = teams[count];
             const homePaletteData = teamData ? parsePaletteFromBytes(teamData.homePalette) : [];
