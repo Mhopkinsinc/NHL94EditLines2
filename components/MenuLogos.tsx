@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import type { TeamInfo } from '../rom-parser';
 
 // Interfaces for offset data structures
@@ -9,6 +9,7 @@ interface ImageOffsets {
     banoffset: number;
     homePaletteOffset: number; // from team data
     awayPaletteOffset: number; // from team data
+    homeBannerPaletteOffset: number;
 }
 
 type BaseOffsets = {
@@ -16,6 +17,7 @@ type BaseOffsets = {
     tloffset: string;
     lpoffset: string;
     banoffset: string;
+    hvpaloffset: string;
 };
 
 interface PaletteColor {
@@ -28,40 +30,33 @@ interface ProcessedTeamData extends ImageOffsets {
     logoPalette: PaletteColor[];
     homePalette: PaletteColor[];
     visitorPalette: PaletteColor[];
+    homeBannerPalette: PaletteColor[];
     rinkLogoUrl: string;
     teamLogoUrl: string;
     bannerUrl: string;
+    // Store raw tile data to allow for re-rendering with new palettes
+    bannerTiles: number[][][]; 
 }
 
 // --- Image & Palette Parsing Logic ---
 
 /**
  * Parses 9-bit Sega Genesis palette data into an array of {rgb: [r, g, b], hex: string} objects.
- * @param buffer The ROM ArrayBuffer.
- * @param offset The starting offset of the palette data.
- * @param numColors The number of colors in the palette (usually 16).
- * @returns An array of color objects.
  */
 const parseGenesisPaletteRGB = (buffer: ArrayBuffer, offset: number, numColors: number): PaletteColor[] => {
     if (offset + numColors * 2 > buffer.byteLength || offset < 0) {
-        // Return a default gray palette if offset is invalid to avoid crashes
         return Array(numColors).fill({ rgb: [128, 128, 128], hex: '0x0888' });
     }
     const view = new DataView(buffer);
     const colors: PaletteColor[] = [];
-
     for (let i = 0; i < numColors; i++) {
-        const word = view.getUint16(offset + i * 2, false); // big-endian
-        // Sega Genesis 9-bit format: 0000 bbb0 ggg0 rrr0
+        const word = view.getUint16(offset + i * 2, false);
         const b = (word >> 9) & 0x7;
         const g = (word >> 5) & 0x7;
         const r = (word >> 1) & 0x7;
-
-        // Convert 3-bit color component (0-7) to 8-bit (0-255) using bit replication
         const r8 = (r << 5) | (r << 2) | (r >> 1);
         const g8 = (g << 5) | (g << 2) | (g >> 1);
         const b8 = (b << 5) | (b << 2) | (b >> 1);
-        
         colors.push({
             rgb: [r8, g8, b8],
             hex: `0x${word.toString(16).toUpperCase().padStart(4, '0')}`
@@ -71,27 +66,21 @@ const parseGenesisPaletteRGB = (buffer: ArrayBuffer, offset: number, numColors: 
 };
 
 /**
- * Parses 9-bit Sega Genesis palette data from a Uint8Array into an array of color objects.
- * @param paletteBytes The raw byte data for the palette (e.g., a 32-byte Uint8Array for 16 colors).
- * @returns An array of color objects.
+ * Parses 9-bit Sega Genesis palette data from a Uint8Array.
  */
 const parsePaletteFromBytes = (paletteBytes: Uint8Array): PaletteColor[] => {
     const numColors = paletteBytes.length / 2;
-    // Create a DataView on the Uint8Array's buffer, respecting its offset and length
     const view = new DataView(paletteBytes.buffer, paletteBytes.byteOffset, paletteBytes.byteLength);
     const colors: PaletteColor[] = [];
-
     for (let i = 0; i < numColors; i++) {
         if ((i * 2) + 2 > view.byteLength) break;
-        const word = view.getUint16(i * 2, false); // big-endian
+        const word = view.getUint16(i * 2, false);
         const b = (word >> 9) & 0x7;
         const g = (word >> 5) & 0x7;
         const r = (word >> 1) & 0x7;
-
         const r8 = (r << 5) | (r << 2) | (r >> 1);
         const g8 = (g << 5) | (g << 2) | (g >> 1);
         const b8 = (b << 5) | (b << 2) | (b >> 1);
-        
         colors.push({
             rgb: [r8, g8, b8],
             hex: `0x${word.toString(16).toUpperCase().padStart(4, '0')}`
@@ -100,29 +89,22 @@ const parsePaletteFromBytes = (paletteBytes: Uint8Array): PaletteColor[] => {
     return colors;
 };
 
-
 /**
  * Parses 4-bit-per-pixel tile data from a Uint8Array.
- * @param tileBytes The raw byte data for the tiles.
- * @returns A 3D array representing tiles, rows, and pixels: tiles[tileIndex][rowIndex][pixelIndex].
  */
 const parseTiles = (tileBytes: Uint8Array): number[][][] => {
     const tiles: number[][][] = [];
-    // An 8x8 4bpp tile is 32 bytes.
     for (let tileOffset = 0; tileOffset < tileBytes.length; tileOffset += 32) {
         const tile: number[][] = [];
         for (let row = 0; row < 8; row++) {
             const rowData: number[] = [];
-            // Each row is 4 bytes (8 pixels * 4 bits/pixel).
             for (let byteIndex = 0; byteIndex < 4; byteIndex++) {
                 const byteOffset = tileOffset + row * 4 + byteIndex;
                 if (byteOffset < tileBytes.length) {
                     const byte = tileBytes[byteOffset];
-                    // Each byte contains two 4-bit pixel palette indices.
-                    rowData.push((byte >> 4) & 0xF); // High nibble
-                    rowData.push(byte & 0xF);      // Low nibble
+                    rowData.push((byte >> 4) & 0xF, byte & 0xF);
                 } else {
-                    rowData.push(0, 0); // Pad if data is incomplete.
+                    rowData.push(0, 0);
                 }
             }
             tile.push(rowData);
@@ -134,10 +116,6 @@ const parseTiles = (tileBytes: Uint8Array): number[][][] => {
 
 /**
  * Creates a base64 PNG data URL from tile data and a palette.
- * @param tiles The parsed tile data.
- * @param palette The parsed [r, g, b] palette data.
- * @param tilesPerRow The number of tiles to draw horizontally.
- * @returns A base64 data URL string for the PNG image.
  */
 function createPngFromTiles(tiles: number[][][], palette: [number, number, number][], tilesPerRow: number): string {
     const numTiles = tiles.length;
@@ -156,7 +134,6 @@ function createPngFromTiles(tiles: number[][][], palette: [number, number, numbe
     const imageData = ctx.createImageData(width, height);
     const data = imageData.data;
 
-    // Iterate through each tile and then each pixel within that tile
     for (let tileRow = 0; tileRow < numRows; tileRow++) {
         for (let pixelRow = 0; pixelRow < 8; pixelRow++) {
             for (let tileCol = 0; tileCol < tilesPerRow; tileCol++) {
@@ -165,12 +142,10 @@ function createPngFromTiles(tiles: number[][][], palette: [number, number, numbe
                     const tilePixelRow = tiles[tileIdx][pixelRow];
                     for (let pixelCol = 0; pixelCol < 8; pixelCol++) {
                         const paletteIndex = tilePixelRow[pixelCol];
-                        
                         const x = tileCol * 8 + pixelCol;
                         const y = tileRow * 8 + pixelRow;
                         const dataIndex = (y * width + x) * 4;
 
-                        // All palette indices are rendered as opaque colors.
                         if (palette[paletteIndex]) {
                             const [r, g, b] = palette[paletteIndex];
                             data[dataIndex] = r;
@@ -178,8 +153,7 @@ function createPngFromTiles(tiles: number[][][], palette: [number, number, numbe
                             data[dataIndex + 2] = b;
                             data[dataIndex + 3] = 255; // Opaque
                         } else {
-                            // Transparent pixel for invalid indices
-                            data[dataIndex + 3] = 0;
+                            data[dataIndex + 3] = 0; // Transparent for invalid indices
                         }
                     }
                 }
@@ -193,18 +167,105 @@ function createPngFromTiles(tiles: number[][][], palette: [number, number, numbe
 
 // --- React Components ---
 
-const PaletteDisplay: React.FC<{ title: string; colors: PaletteColor[] }> = ({ title, colors }) => (
+const ColorPickerPopover: React.FC<{
+  anchorEl: HTMLElement;
+  initialColor: [number, number, number];
+  onChange: (color: string) => void;
+  onClose: () => void;
+}> = ({ anchorEl, initialColor, onChange, onClose }) => {
+    const popoverRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const toHex = (c: number) => c.toString(16).padStart(2, '0');
+    const initialHex = `#${toHex(initialColor[0])}${toHex(initialColor[1])}${toHex(initialColor[2])}`;
+
+    useEffect(() => {
+        inputRef.current?.click();
+        const handleClickOutside = (event: MouseEvent) => {
+            if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+                onClose();
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [onClose]);
+
+    const rect = anchorEl.getBoundingClientRect();
+    const style: React.CSSProperties = {
+        position: 'fixed',
+        top: `${rect.bottom + 8}px`,
+        left: `${rect.left + rect.width / 2}px`,
+        transform: 'translateX(-50%)',
+        zIndex: 100,
+    };
+    
+    return (
+        <div ref={popoverRef} style={style} className="bg-gray-800 p-2 rounded-lg shadow-2xl border border-gray-600" onClick={(e) => e.stopPropagation()}>
+            <input
+                ref={inputRef}
+                type="color"
+                value={initialHex}
+                onChange={(e) => onChange(e.target.value)}
+                onBlur={onClose}
+                className="w-16 h-8 p-0 border-none bg-transparent"
+                style={{ cursor: 'pointer' }}
+            />
+        </div>
+    );
+};
+
+const PaletteDisplay: React.FC<{ 
+    title: string; 
+    colors: PaletteColor[];
+    onColorClick?: (index: number, event: React.MouseEvent<HTMLDivElement>) => void;
+    isDraggable?: boolean;
+    draggedColorIndex?: number | null;
+    dropTargetColorIndex?: number | null;
+    onColorDragStart?: (colorIndex: number, e: React.DragEvent<HTMLDivElement>) => void;
+    onColorDragOver?: (e: React.DragEvent<HTMLDivElement>) => void;
+    onColorDragEnter?: (colorIndex: number, e: React.DragEvent<HTMLDivElement>) => void;
+    onColorDragLeave?: (e: React.DragEvent<HTMLDivElement>) => void;
+    onColorDrop?: (colorIndex: number, e: React.DragEvent<HTMLDivElement>) => void;
+}> = ({ 
+    title, 
+    colors, 
+    onColorClick,
+    isDraggable = false,
+    draggedColorIndex,
+    dropTargetColorIndex,
+    onColorDragStart,
+    onColorDragOver,
+    onColorDragEnter,
+    onColorDragLeave,
+    onColorDrop,
+}) => (
     <div>
         <h4 className="text-sm font-semibold text-gray-400 mt-2">{title}</h4>
         <div className="flex flex-wrap gap-1 mt-1">
             {colors.map((color, index) => {
                 const rgbString = `rgb(${color.rgb.join(',')})`;
+                const isBeingDragged = isDraggable && draggedColorIndex === index;
+                const isDropTarget = isDraggable && dropTargetColorIndex === index && draggedColorIndex !== index;
+
                 return (
                     <div 
-                        key={index} 
-                        className="w-6 h-6 rounded border border-gray-600"
+                        key={index}
+                        draggable={isDraggable}
+                        onDragStart={isDraggable && onColorDragStart ? (e) => onColorDragStart(index, e) : undefined}
+                        onDragOver={isDraggable && onColorDragOver ? onColorDragOver : undefined}
+                        onDragEnter={isDraggable && onColorDragEnter ? (e) => onColorDragEnter(index, e) : undefined}
+                        onDragLeave={isDraggable && onColorDragLeave ? onColorDragLeave : undefined}
+                        onDrop={isDraggable && onColorDrop ? (e) => { e.preventDefault(); onColorDrop(index, e); } : undefined}
+                        className={`w-6 h-6 rounded border border-gray-600 transition-all duration-150 
+                            ${onColorClick ? 'cursor-pointer hover:scale-110 hover:ring-2 hover:ring-sky-400' : ''}
+                            ${isDraggable ? 'cursor-grab active:cursor-grabbing' : ''}
+                            ${isBeingDragged ? 'opacity-30 scale-90' : ''}
+                            ${isDropTarget ? 'ring-2 ring-offset-2 ring-offset-gray-800 ring-yellow-400 scale-110' : ''}`}
                         style={{ backgroundColor: rgbString }}
                         title={`${rgbString} - ${color.hex}`}
+                        onClick={onColorClick ? (e) => onColorClick(index, e) : undefined}
                     />
                 );
             })}
@@ -226,27 +287,41 @@ const AssetDisplay: React.FC<{ title: string; offset: number; imageUrl: string }
 
 
 export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInfo[], numberOfTeams: number }> = ({ romBuffer, teams, numberOfTeams }) => {
-    const processedData = useMemo<ProcessedTeamData[]>(() => {
-        if (!romBuffer || teams.length === 0) return [];
+    const [processedData, setProcessedData] = useState<ProcessedTeamData[]>([]);
+    const [pickerState, setPickerState] = useState<{ teamIndex: number; colorIndex: number; anchorEl: HTMLElement } | null>(null);
+    const [draggedColor, setDraggedColor] = useState<{ teamIndex: number; colorIndex: number } | null>(null);
+    const [dropTarget, setDropTarget] = useState<{ teamIndex: number; colorIndex: number } | null>(null);
+
+    useEffect(() => {
+        if (!romBuffer || teams.length === 0) {
+            setProcessedData([]);
+            return;
+        }
 
         const romtype = numberOfTeams;
         const teamcnt = numberOfTeams;
         const newImgoffsets: ProcessedTeamData[] = [];
 
         const baseOffsets: BaseOffsets = romtype === 32
-            ? { rloffset: '1E317E', tloffset: '1D38B0', lpoffset: '1D34A6', banoffset: '1DD370' }
-            : { rloffset: '1D6F02', tloffset: '1C85B8', lpoffset: '1C81EE', banoffset: '1D16CC' };
+            ? { rloffset: '1E317E', tloffset: '1D38B0', lpoffset: '1D34A6', banoffset: '1DD370', hvpaloffset: '1D1B0A' }
+            : { rloffset: '1D6F02', tloffset: '1C85B8', lpoffset: '1C81EE', banoffset: '1D16CC', hvpaloffset: '1C6982' };
 
-        const increments = { rloffset: 0x30A, tloffset: 0x4D6, lpoffset: 0x20, banoffset: 0x2C0 };
-        const imageByteSizes = { rinkLogo: 0x300, teamLogo: 0x480, banner: 0x2C0 }; // Approximate byte sizes for tiles
+        const increments = { rloffset: 0x30A, tloffset: 0x4D6, lpoffset: 0x20, banoffset: 0x2C0, hvpaloffset: 0x40 };
+        const imageByteSizes = { rinkLogo: 0x300, teamLogo: 0x480, banner: 0x2C0 };
 
         for (let count = 0; count < teamcnt; count++) {
             const rloffset = parseInt(baseOffsets.rloffset, 16) + increments.rloffset * count;
             const tloffset = parseInt(baseOffsets.tloffset, 16) + increments.tloffset * count;
             const lpoffset = parseInt(baseOffsets.lpoffset, 16) + increments.lpoffset * count;
             const banoffset = parseInt(baseOffsets.banoffset, 16) + increments.banoffset * count;
-
+            const hvpaloffset = parseInt(baseOffsets.hvpaloffset, 16) + increments.hvpaloffset * count;
+            const homeBannerPaletteOffset = hvpaloffset;
+            
             const logoPaletteData = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
+            const homeBannerPaletteData = parseGenesisPaletteRGB(romBuffer, homeBannerPaletteOffset, 16);
+            
+            if (homeBannerPaletteData.length > 5) { homeBannerPaletteData[5] = { rgb: [255, 255, 255], hex: '0x0EEE' }; }
+            if (homeBannerPaletteData.length > 6) { homeBannerPaletteData[6] = { rgb: [0, 0, 0], hex: '0x0000' }; }
 
             const teamData = teams[count];
             const homePaletteData = teamData ? parsePaletteFromBytes(teamData.homePalette) : [];
@@ -254,7 +329,6 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             const homePaletteOffset = teamData ? teamData.teamPointer + 12 : 0;
             const awayPaletteOffset = teamData ? teamData.teamPointer + 44 : 0;
             
-            // Extract tile data based on offsets and known sizes
             const rinkLogoTiles = parseTiles(new Uint8Array(romBuffer, rloffset, imageByteSizes.rinkLogo));
             const teamLogoTiles = parseTiles(new Uint8Array(romBuffer, tloffset, imageByteSizes.teamLogo));
             const bannerTiles = parseTiles(new Uint8Array(romBuffer, banoffset, imageByteSizes.banner));
@@ -263,17 +337,98 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                 teamName: teamData ? `${teamData.city} ${teamData.name}` : `Team ${count + 1}`,
                 rloffset, tloffset, lpoffset, banoffset,
                 homePaletteOffset, awayPaletteOffset,
+                homeBannerPaletteOffset,
                 logoPalette: logoPaletteData,
                 homePalette: homePaletteData,
                 visitorPalette: visitorPaletteData,
-                rinkLogoUrl: createPngFromTiles(rinkLogoTiles, homePaletteData.map(c => c.rgb), 6), // 48px width -> 6 tiles
-                teamLogoUrl: createPngFromTiles(teamLogoTiles, logoPaletteData.map(c => c.rgb), 6), // 48px width -> 6 tiles
-                bannerUrl: createPngFromTiles(bannerTiles, homePaletteData.map(c => c.rgb), 11), // 88px width -> 11 tiles
+                homeBannerPalette: homeBannerPaletteData,
+                rinkLogoUrl: createPngFromTiles(rinkLogoTiles, homePaletteData.map(c => c.rgb) as [number,number,number][], 6),
+                teamLogoUrl: createPngFromTiles(teamLogoTiles, logoPaletteData.map(c => c.rgb) as [number,number,number][], 6),
+                bannerUrl: createPngFromTiles(bannerTiles, homeBannerPaletteData.map(c => c.rgb) as [number,number,number][], 11),
+                bannerTiles,
             });
         }
-        
-        return newImgoffsets;
+        setProcessedData(newImgoffsets);
     }, [romBuffer, teams, numberOfTeams]);
+
+    const handleColorSwatchClick = (teamIndex: number, colorIndex: number, event: React.MouseEvent<HTMLDivElement>) => {
+        setPickerState({ teamIndex, colorIndex, anchorEl: event.currentTarget });
+    };
+
+    const handleColorChange = (newColorHex: string) => {
+        if (!pickerState) return;
+        const { teamIndex, colorIndex } = pickerState;
+
+        const r = parseInt(newColorHex.slice(1, 3), 16);
+        const g = parseInt(newColorHex.slice(3, 5), 16);
+        const b = parseInt(newColorHex.slice(5, 7), 16);
+
+        setProcessedData(prevData => {
+            const newData = prevData.map((team, index) => {
+                if (index === teamIndex) {
+                    const newHomeBannerPalette = [...team.homeBannerPalette];
+                    const newColor: PaletteColor = { ...newHomeBannerPalette[colorIndex], rgb: [r, g, b] };
+                    newHomeBannerPalette[colorIndex] = newColor;
+
+                    const newBannerUrl = createPngFromTiles(team.bannerTiles, newHomeBannerPalette.map(c => c.rgb) as [number,number,number][], 11);
+                    
+                    return { ...team, homeBannerPalette: newHomeBannerPalette, bannerUrl: newBannerUrl };
+                }
+                return team;
+            });
+            return newData;
+        });
+    };
+
+    const handleClosePicker = () => {
+        setPickerState(null);
+    };
+
+    const handleColorDragStart = (teamIndex: number, colorIndex: number, e: React.DragEvent) => {
+        setDraggedColor({ teamIndex, colorIndex });
+        e.dataTransfer.effectAllowed = 'copy';
+    };
+    
+    const handleColorDragOver = (e: React.DragEvent) => {
+        e.preventDefault(); // Necessary to allow dropping
+    };
+    
+    const handleColorDragEnter = (teamIndex: number, colorIndex: number) => {
+        if (draggedColor && (draggedColor.teamIndex !== teamIndex || draggedColor.colorIndex !== colorIndex)) {
+            setDropTarget({ teamIndex, colorIndex });
+        }
+    };
+    
+    const handleColorDragLeave = () => {
+        setDropTarget(null);
+    };
+    
+    const handleColorDrop = (teamIndex: number, colorIndex: number) => {
+        if (!draggedColor || (draggedColor.teamIndex === teamIndex && draggedColor.colorIndex === colorIndex)) {
+            setDraggedColor(null);
+            setDropTarget(null);
+            return;
+        }
+    
+        const sourceColor = processedData[draggedColor.teamIndex].homeBannerPalette[draggedColor.colorIndex];
+    
+        setProcessedData(prevData => {
+            const newData = [...prevData];
+            const targetTeam = { ...newData[teamIndex] };
+            const newPalette = [...targetTeam.homeBannerPalette];
+            
+            newPalette[colorIndex] = sourceColor;
+            
+            targetTeam.homeBannerPalette = newPalette;
+            targetTeam.bannerUrl = createPngFromTiles(targetTeam.bannerTiles, newPalette.map(c => c.rgb) as [number,number,number][], 11);
+            
+            newData[teamIndex] = targetTeam;
+            return newData;
+        });
+    
+        setDraggedColor(null);
+        setDropTarget(null);
+    };
 
     if (!romBuffer) {
         return (
@@ -285,27 +440,50 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
     }
 
     return (
-        <div className="bg-[#2B3544] p-4 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4">Menu Logo Assets</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {processedData.map(data => (
-                    <div key={data.teamName} className="bg-[#212934] p-4 rounded-lg border border-sky-500/20">
-                        <h3 className="text-lg font-bold text-sky-300 truncate" title={data.teamName}>{data.teamName}</h3>
-                        
-                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                            <AssetDisplay title="Rink Logo" offset={data.rloffset} imageUrl={data.rinkLogoUrl} />
-                            <AssetDisplay title="Team Logo" offset={data.tloffset} imageUrl={data.teamLogoUrl} />
-                            <AssetDisplay title="Banner" offset={data.banoffset} imageUrl={data.bannerUrl} />
-                        </div>
+        <>
+            <div className="bg-[#2B3544] p-4 rounded-lg" onDragEnd={() => { setDraggedColor(null); setDropTarget(null); }}>
+                <h2 className="text-2xl font-bold mb-4">Menu Logo Assets</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {processedData.map((data, teamIndex) => (
+                        <div key={data.teamName} className="bg-[#212934] p-4 rounded-lg border border-sky-500/20">
+                            <h3 className="text-lg font-bold text-sky-300 truncate" title={data.teamName}>{data.teamName}</h3>
+                            
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                                <AssetDisplay title="Rink Logo" offset={data.rloffset} imageUrl={data.rinkLogoUrl} />
+                                <AssetDisplay title="Team Logo" offset={data.tloffset} imageUrl={data.teamLogoUrl} />
+                                <AssetDisplay title="Banner" offset={data.banoffset} imageUrl={data.bannerUrl} />
+                            </div>
 
-                         <div className="mt-3 border-t border-gray-700 pt-3">
-                            <PaletteDisplay title={`Logo Palette (0x${data.lpoffset.toString(16).toUpperCase()})`} colors={data.logoPalette} />
-                            <PaletteDisplay title={`Home Jersey Palette (0x${data.homePaletteOffset.toString(16).toUpperCase()})`} colors={data.homePalette} />
-                            <PaletteDisplay title={`Away Jersey Palette (0x${data.awayPaletteOffset.toString(16).toUpperCase()})`} colors={data.visitorPalette} />
+                            <div className="mt-3 border-t border-gray-700 pt-3">
+                                <PaletteDisplay title={`Logo Palette (0x${data.lpoffset.toString(16).toUpperCase()})`} colors={data.logoPalette} />
+                                <PaletteDisplay title={`Home Jersey Palette (0x${data.homePaletteOffset.toString(16).toUpperCase()})`} colors={data.homePalette} />
+                                <PaletteDisplay title={`Away Jersey Palette (0x${data.awayPaletteOffset.toString(16).toUpperCase()})`} colors={data.visitorPalette} />
+                                <PaletteDisplay 
+                                    title={`Banner Palette (0x${data.homeBannerPaletteOffset.toString(16).toUpperCase()})`} 
+                                    colors={data.homeBannerPalette} 
+                                    onColorClick={(colorIndex, event) => handleColorSwatchClick(teamIndex, colorIndex, event)}
+                                    isDraggable={true}
+                                    draggedColorIndex={draggedColor?.teamIndex === teamIndex ? draggedColor.colorIndex : null}
+                                    dropTargetColorIndex={dropTarget?.teamIndex === teamIndex ? dropTarget.colorIndex : null}
+                                    onColorDragStart={(colorIndex, e) => handleColorDragStart(teamIndex, colorIndex, e)}
+                                    onColorDragOver={handleColorDragOver}
+                                    onColorDragEnter={(colorIndex) => handleColorDragEnter(teamIndex, colorIndex)}
+                                    onColorDragLeave={handleColorDragLeave}
+                                    onColorDrop={(colorIndex) => handleColorDrop(teamIndex, colorIndex)}
+                                />
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
-        </div>
+            {pickerState && pickerState.anchorEl && (
+                <ColorPickerPopover
+                    anchorEl={pickerState.anchorEl}
+                    initialColor={processedData[pickerState.teamIndex].homeBannerPalette[pickerState.colorIndex].rgb}
+                    onChange={handleColorChange}
+                    onClose={handleClosePicker}
+                />
+            )}
+        </>
     );
 };
