@@ -134,7 +134,6 @@ const parseTiles = (tileBytes: Uint8Array): number[][][] => {
 
 /**
  * Creates a base64 PNG data URL from tile data and a palette.
- * The first color in the palette (index 0) is treated as transparent.
  * @param tiles The parsed tile data.
  * @param palette The parsed [r, g, b] palette data.
  * @param tilesPerRow The number of tiles to draw horizontally.
@@ -171,15 +170,15 @@ function createPngFromTiles(tiles: number[][][], palette: [number, number, numbe
                         const y = tileRow * 8 + pixelRow;
                         const dataIndex = (y * width + x) * 4;
 
-                        // Index 0 is transparent, all other indices are opaque
-                        if (paletteIndex > 0 && palette[paletteIndex]) {
+                        // All palette indices are rendered as opaque colors.
+                        if (palette[paletteIndex]) {
                             const [r, g, b] = palette[paletteIndex];
                             data[dataIndex] = r;
                             data[dataIndex + 1] = g;
                             data[dataIndex + 2] = b;
                             data[dataIndex + 3] = 255; // Opaque
                         } else {
-                            // Transparent pixel (for palette index 0 or invalid indices)
+                            // Transparent pixel for invalid indices
                             data[dataIndex + 3] = 0;
                         }
                     }
@@ -199,18 +198,13 @@ const PaletteDisplay: React.FC<{ title: string; colors: PaletteColor[] }> = ({ t
         <h4 className="text-sm font-semibold text-gray-400 mt-2">{title}</h4>
         <div className="flex flex-wrap gap-1 mt-1">
             {colors.map((color, index) => {
-                const isTransparent = index === 0;
                 const rgbString = `rgb(${color.rgb.join(',')})`;
                 return (
                     <div 
                         key={index} 
-                        className="w-6 h-6 rounded border border-gray-600 relative overflow-hidden"
-                        style={isTransparent ? {
-                            backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)',
-                            backgroundSize: '8px 8px',
-                            backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
-                        } : { backgroundColor: rgbString }}
-                        title={isTransparent ? 'Transparent' : `${rgbString} - ${color.hex}`}
+                        className="w-6 h-6 rounded border border-gray-600"
+                        style={{ backgroundColor: rgbString }}
+                        title={`${rgbString} - ${color.hex}`}
                     />
                 );
             })}
