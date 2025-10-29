@@ -35,7 +35,7 @@ const navItems = [
         label: 'Assets', 
         icon: Squares2x2Icon,
         children: [
-            { id: 'assets-menu-logos', label: 'Menu Logos' },
+            { id: 'assets-menu-logos', label: 'Team Graphics' },
         ]
     },
     { id: 'settings', label: 'Settings', icon: Cog6ToothIcon },

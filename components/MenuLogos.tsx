@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import type { TeamInfo } from '../rom-parser';
+import { ChevronUpIcon, ChevronDownIcon } from './icons';
 
 // Interfaces for offset data structures
 interface ImageOffsets {
@@ -9,7 +10,7 @@ interface ImageOffsets {
     banoffset: number;
     homePaletteOffset: number; // from team data
     awayPaletteOffset: number; // from team data
-    homeBannerPaletteOffset: number;
+    menuBannerPaletteOffset: number;
 }
 
 type BaseOffsets = {
@@ -30,7 +31,7 @@ interface ProcessedTeamData extends ImageOffsets {
     logoPalette: PaletteColor[];
     homePalette: PaletteColor[];
     visitorPalette: PaletteColor[];
-    homeBannerPalette: PaletteColor[];
+    menuBannerPalette: PaletteColor[];
     rinkLogoUrl: string;
     teamLogoUrl: string;
     bannerUrl: string;
@@ -288,15 +289,47 @@ const AssetDisplay: React.FC<{ title: string; offset: number; imageUrl: string }
 
 export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInfo[], numberOfTeams: number }> = ({ romBuffer, teams, numberOfTeams }) => {
     const [processedData, setProcessedData] = useState<ProcessedTeamData[]>([]);
-    const [pickerState, setPickerState] = useState<{ teamIndex: number; colorIndex: number; anchorEl: HTMLElement } | null>(null);
-    const [draggedColor, setDraggedColor] = useState<{ teamIndex: number; colorIndex: number } | null>(null);
-    const [dropTarget, setDropTarget] = useState<{ teamIndex: number; colorIndex: number } | null>(null);
+    const [scoreBoardPalette, setScoreBoardPalette] = useState<PaletteColor[]>([]);
+    const [pickerState, setPickerState] = useState<{ 
+        paletteType: 'menuBanner' | 'scoreBoard';
+        teamIndex?: number;
+        colorIndex: number; 
+        anchorEl: HTMLElement 
+    } | null>(null);
+    const [draggedColor, setDraggedColor] = useState<{ 
+        paletteType: 'menuBanner' | 'scoreBoard';
+        teamIndex?: number;
+        colorIndex: number 
+    } | null>(null);
+    const [dropTarget, setDropTarget] = useState<{ 
+        paletteType: 'menuBanner' | 'scoreBoard';
+        teamIndex?: number;
+        colorIndex: number 
+    } | null>(null);
+    const [collapsedTeams, setCollapsedTeams] = useState<Set<number>>(new Set());
+
+    const toggleTeamCollapse = (teamIndex: number) => {
+        setCollapsedTeams(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(teamIndex)) {
+                newSet.delete(teamIndex);
+            } else {
+                newSet.add(teamIndex);
+            }
+            return newSet;
+        });
+    };
 
     useEffect(() => {
         if (!romBuffer || teams.length === 0) {
             setProcessedData([]);
+            setScoreBoardPalette([]);
             return;
         }
+
+        const scoreBoardBannerPaletteOffset = 0x59944;
+        const scoreBoardBannerPaletteData = parseGenesisPaletteRGB(romBuffer, scoreBoardBannerPaletteOffset, 16);
+        setScoreBoardPalette(scoreBoardBannerPaletteData);
 
         const romtype = numberOfTeams;
         const teamcnt = numberOfTeams;
@@ -315,10 +348,10 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             const lpoffset = parseInt(baseOffsets.lpoffset, 16) + increments.lpoffset * count;
             const banoffset = parseInt(baseOffsets.banoffset, 16) + increments.banoffset * count;
             const hvpaloffset = parseInt(baseOffsets.hvpaloffset, 16) + increments.hvpaloffset * count;
-            const homeBannerPaletteOffset = hvpaloffset;
+            const menuBannerPaletteOffset = hvpaloffset;
             
             const logoPaletteData = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
-            const homeBannerPaletteData = parseGenesisPaletteRGB(romBuffer, homeBannerPaletteOffset, 16);
+            const menuBannerPaletteData = parseGenesisPaletteRGB(romBuffer, menuBannerPaletteOffset, 16);
 
             const teamData = teams[count];
             const homePaletteData = teamData ? parsePaletteFromBytes(teamData.homePalette) : [];
@@ -334,14 +367,14 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                 teamName: teamData ? `${teamData.city} ${teamData.name}` : `Team ${count + 1}`,
                 rloffset, tloffset, lpoffset, banoffset,
                 homePaletteOffset, awayPaletteOffset,
-                homeBannerPaletteOffset,
+                menuBannerPaletteOffset,
                 logoPalette: logoPaletteData,
                 homePalette: homePaletteData,
                 visitorPalette: visitorPaletteData,
-                homeBannerPalette: homeBannerPaletteData,
+                menuBannerPalette: menuBannerPaletteData,
                 rinkLogoUrl: createPngFromTiles(rinkLogoTiles, homePaletteData.map(c => c.rgb) as [number,number,number][], 6),
                 teamLogoUrl: createPngFromTiles(teamLogoTiles, logoPaletteData.map(c => c.rgb) as [number,number,number][], 6),
-                bannerUrl: createPngFromTiles(bannerTiles, homeBannerPaletteData.map(c => c.rgb) as [number,number,number][], 11),
+                bannerUrl: createPngFromTiles(bannerTiles, scoreBoardBannerPaletteData.map(c => c.rgb) as [number,number,number][], 11),
                 bannerTiles,
             });
         }
@@ -349,32 +382,43 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
     }, [romBuffer, teams, numberOfTeams]);
 
     const handleColorSwatchClick = (teamIndex: number, colorIndex: number, event: React.MouseEvent<HTMLDivElement>) => {
-        setPickerState({ teamIndex, colorIndex, anchorEl: event.currentTarget });
+        setPickerState({ paletteType: 'menuBanner', teamIndex, colorIndex, anchorEl: event.currentTarget });
+    };
+
+    const handleScoreBoardColorClick = (colorIndex: number, event: React.MouseEvent<HTMLDivElement>) => {
+        setPickerState({ paletteType: 'scoreBoard', colorIndex, anchorEl: event.currentTarget });
     };
 
     const handleColorChange = (newColorHex: string) => {
         if (!pickerState) return;
-        const { teamIndex, colorIndex } = pickerState;
+        const { paletteType, teamIndex, colorIndex } = pickerState;
 
         const r = parseInt(newColorHex.slice(1, 3), 16);
         const g = parseInt(newColorHex.slice(3, 5), 16);
         const b = parseInt(newColorHex.slice(5, 7), 16);
 
-        setProcessedData(prevData => {
-            const newData = prevData.map((team, index) => {
-                if (index === teamIndex) {
-                    const newHomeBannerPalette = [...team.homeBannerPalette];
-                    const newColor: PaletteColor = { ...newHomeBannerPalette[colorIndex], rgb: [r, g, b] };
-                    newHomeBannerPalette[colorIndex] = newColor;
-
-                    const newBannerUrl = createPngFromTiles(team.bannerTiles, newHomeBannerPalette.map(c => c.rgb) as [number,number,number][], 11);
-                    
-                    return { ...team, homeBannerPalette: newHomeBannerPalette, bannerUrl: newBannerUrl };
-                }
-                return team;
+        if (paletteType === 'scoreBoard') {
+            const newPalette = [...scoreBoardPalette];
+            newPalette[colorIndex] = { ...newPalette[colorIndex], rgb: [r, g, b] };
+            setScoreBoardPalette(newPalette);
+            
+            // Re-render all banners with the new global palette
+            setProcessedData(prevProcData => prevProcData.map(team => ({
+                ...team,
+                bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb) as [number,number,number][], 11)
+            })));
+        } else if (paletteType === 'menuBanner' && teamIndex !== undefined) {
+            setProcessedData(prevData => {
+                return prevData.map((team, index) => {
+                    if (index === teamIndex) {
+                        const newMenuBannerPalette = [...team.menuBannerPalette];
+                        newMenuBannerPalette[colorIndex] = { ...newMenuBannerPalette[colorIndex], rgb: [r, g, b] };
+                        return { ...team, menuBannerPalette: newMenuBannerPalette };
+                    }
+                    return team;
+                });
             });
-            return newData;
-        });
+        }
     };
 
     const handleClosePicker = () => {
@@ -382,7 +426,12 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
     };
 
     const handleColorDragStart = (teamIndex: number, colorIndex: number, e: React.DragEvent) => {
-        setDraggedColor({ teamIndex, colorIndex });
+        setDraggedColor({ paletteType: 'menuBanner', teamIndex, colorIndex });
+        e.dataTransfer.effectAllowed = 'copy';
+    };
+
+    const handleScoreBoardDragStart = (colorIndex: number, e: React.DragEvent) => {
+        setDraggedColor({ paletteType: 'scoreBoard', colorIndex });
         e.dataTransfer.effectAllowed = 'copy';
     };
     
@@ -390,9 +439,9 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         e.preventDefault(); // Necessary to allow dropping
     };
     
-    const handleColorDragEnter = (teamIndex: number, colorIndex: number) => {
-        if (draggedColor && (draggedColor.teamIndex !== teamIndex || draggedColor.colorIndex !== colorIndex)) {
-            setDropTarget({ teamIndex, colorIndex });
+    const handleColorDragEnter = (paletteType: 'menuBanner' | 'scoreBoard', teamIndex: number | null, colorIndex: number) => {
+        if (draggedColor) {
+            setDropTarget({ paletteType, teamIndex: teamIndex ?? undefined, colorIndex });
         }
     };
     
@@ -400,28 +449,39 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         setDropTarget(null);
     };
     
-    const handleColorDrop = (teamIndex: number, colorIndex: number) => {
-        if (!draggedColor || (draggedColor.teamIndex === teamIndex && draggedColor.colorIndex === colorIndex)) {
-            setDraggedColor(null);
-            setDropTarget(null);
-            return;
+    const handleColorDrop = (targetPaletteType: 'menuBanner' | 'scoreBoard', targetTeamIndex: number | null, targetColorIndex: number) => {
+        if (!draggedColor || !dropTarget) return;
+
+        // Get the source color data
+        let sourceColor: PaletteColor;
+        if (draggedColor.paletteType === 'scoreBoard') {
+            sourceColor = scoreBoardPalette[draggedColor.colorIndex];
+        } else {
+            sourceColor = processedData[draggedColor.teamIndex!].menuBannerPalette[draggedColor.colorIndex];
         }
     
-        const sourceColor = processedData[draggedColor.teamIndex].homeBannerPalette[draggedColor.colorIndex];
-    
-        setProcessedData(prevData => {
-            const newData = [...prevData];
-            const targetTeam = { ...newData[teamIndex] };
-            const newPalette = [...targetTeam.homeBannerPalette];
-            
-            newPalette[colorIndex] = sourceColor;
-            
-            targetTeam.homeBannerPalette = newPalette;
-            targetTeam.bannerUrl = createPngFromTiles(targetTeam.bannerTiles, newPalette.map(c => c.rgb) as [number,number,number][], 11);
-            
-            newData[teamIndex] = targetTeam;
-            return newData;
-        });
+        // Update the target palette
+        if (targetPaletteType === 'scoreBoard') {
+            const newPalette = [...scoreBoardPalette];
+            newPalette[targetColorIndex] = sourceColor;
+            setScoreBoardPalette(newPalette);
+            // Re-render all banners
+            setProcessedData(prevProcData => prevProcData.map(team => ({
+                ...team,
+                bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb) as [number,number,number][], 11)
+            })));
+        } else if (targetPaletteType === 'menuBanner' && targetTeamIndex !== null) {
+            setProcessedData(prevData => {
+                return prevData.map((team, index) => {
+                    if (index === targetTeamIndex) {
+                        const newMenuBannerPalette = [...team.menuBannerPalette];
+                        newMenuBannerPalette[targetColorIndex] = sourceColor;
+                        return { ...team, menuBannerPalette: newMenuBannerPalette };
+                    }
+                    return team;
+                });
+            });
+        }
     
         setDraggedColor(null);
         setDropTarget(null);
@@ -439,44 +499,82 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
     return (
         <>
             <div className="bg-[#2B3544] p-4 rounded-lg" onDragEnd={() => { setDraggedColor(null); setDropTarget(null); }}>
-                <h2 className="text-2xl font-bold mb-4">Menu Logo Assets</h2>
+                <h2 className="text-2xl font-bold mb-4">Team Assets</h2>
+                <div className="bg-[#212934] p-4 rounded-lg border border-sky-500/20 mb-4">
+                    <h3 className="text-lg font-bold text-sky-300">Global Palettes</h3>
+                    <PaletteDisplay
+                        title={`Scoreboard Banner Palette (0x59944)`}
+                        colors={scoreBoardPalette}
+                        onColorClick={(colorIndex, event) => handleScoreBoardColorClick(colorIndex, event)}
+                        isDraggable={true}
+                        draggedColorIndex={draggedColor?.paletteType === 'scoreBoard' ? draggedColor.colorIndex : null}
+                        dropTargetColorIndex={dropTarget?.paletteType === 'scoreBoard' ? dropTarget.colorIndex : null}
+                        onColorDragStart={(colorIndex, e) => handleScoreBoardDragStart(colorIndex, e)}
+                        onColorDragOver={handleColorDragOver}
+                        onColorDragEnter={(colorIndex) => handleColorDragEnter('scoreBoard', null, colorIndex)}
+                        onColorDragLeave={handleColorDragLeave}
+                        onColorDrop={(colorIndex) => handleColorDrop('scoreBoard', null, colorIndex)}
+                    />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {processedData.map((data, teamIndex) => (
-                        <div key={data.teamName} className="bg-[#212934] p-4 rounded-lg border border-sky-500/20">
-                            <h3 className="text-lg font-bold text-sky-300 truncate" title={data.teamName}>{data.teamName}</h3>
-                            
-                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                                <AssetDisplay title="Rink Logo" offset={data.rloffset} imageUrl={data.rinkLogoUrl} />
-                                <AssetDisplay title="Team Logo" offset={data.tloffset} imageUrl={data.teamLogoUrl} />
-                                <AssetDisplay title="Banner" offset={data.banoffset} imageUrl={data.bannerUrl} />
-                            </div>
+                    {processedData.map((data, teamIndex) => {
+                        const isCollapsed = collapsedTeams.has(teamIndex);
+                        return (
+                            <div key={data.teamName} className="bg-[#212934] p-4 rounded-lg border border-sky-500/20">
+                                <button
+                                    className="flex justify-between items-center w-full text-left"
+                                    onClick={() => toggleTeamCollapse(teamIndex)}
+                                    aria-expanded={!isCollapsed}
+                                    aria-controls={`team-details-${teamIndex}`}
+                                >
+                                    <h3 className="text-lg font-bold text-sky-300 truncate" title={data.teamName}>{data.teamName}</h3>
+                                    <div className="p-1 rounded-full hover:bg-sky-900/50">
+                                        {isCollapsed ? <ChevronDownIcon className="w-5 h-5 text-gray-400" /> : <ChevronUpIcon className="w-5 h-5" />}
+                                    </div>
+                                </button>
+                                
+                                <div
+                                    id={`team-details-${teamIndex}`}
+                                    className={`transition-all duration-500 ease-in-out overflow-hidden ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[1000px] opacity-100'}`}
+                                >
+                                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                                        <AssetDisplay title="Rink Logo" offset={data.rloffset} imageUrl={data.rinkLogoUrl} />
+                                        <AssetDisplay title="Team Logo" offset={data.tloffset} imageUrl={data.teamLogoUrl} />
+                                        <AssetDisplay title="Banner" offset={data.banoffset} imageUrl={data.bannerUrl} />
+                                    </div>
 
-                            <div className="mt-3 border-t border-gray-700 pt-3">
-                                <PaletteDisplay title={`Logo Palette (0x${data.lpoffset.toString(16).toUpperCase()})`} colors={data.logoPalette} />
-                                <PaletteDisplay title={`Home Jersey Palette (0x${data.homePaletteOffset.toString(16).toUpperCase()})`} colors={data.homePalette} />
-                                <PaletteDisplay title={`Away Jersey Palette (0x${data.awayPaletteOffset.toString(16).toUpperCase()})`} colors={data.visitorPalette} />
-                                <PaletteDisplay 
-                                    title={`Banner Palette (0x${data.homeBannerPaletteOffset.toString(16).toUpperCase()})`} 
-                                    colors={data.homeBannerPalette} 
-                                    onColorClick={(colorIndex, event) => handleColorSwatchClick(teamIndex, colorIndex, event)}
-                                    isDraggable={true}
-                                    draggedColorIndex={draggedColor?.teamIndex === teamIndex ? draggedColor.colorIndex : null}
-                                    dropTargetColorIndex={dropTarget?.teamIndex === teamIndex ? dropTarget.colorIndex : null}
-                                    onColorDragStart={(colorIndex, e) => handleColorDragStart(teamIndex, colorIndex, e)}
-                                    onColorDragOver={handleColorDragOver}
-                                    onColorDragEnter={(colorIndex) => handleColorDragEnter(teamIndex, colorIndex)}
-                                    onColorDragLeave={handleColorDragLeave}
-                                    onColorDrop={(colorIndex) => handleColorDrop(teamIndex, colorIndex)}
-                                />
+                                    <div className="mt-3 border-t border-gray-700 pt-3">
+                                        <PaletteDisplay title={`Logo Palette (0x${data.lpoffset.toString(16).toUpperCase()})`} colors={data.logoPalette} />
+                                        <PaletteDisplay title={`Home Jersey Palette (0x${data.homePaletteOffset.toString(16).toUpperCase()})`} colors={data.homePalette} />
+                                        <PaletteDisplay title={`Away Jersey Palette (0x${data.awayPaletteOffset.toString(16).toUpperCase()})`} colors={data.visitorPalette} />
+                                        <PaletteDisplay 
+                                            title={`Menu Banner Palette (0x${data.menuBannerPaletteOffset.toString(16).toUpperCase()})`} 
+                                            colors={data.menuBannerPalette} 
+                                            onColorClick={(colorIndex, event) => handleColorSwatchClick(teamIndex, colorIndex, event)}
+                                            isDraggable={true}
+                                            draggedColorIndex={draggedColor?.paletteType === 'menuBanner' && draggedColor.teamIndex === teamIndex ? draggedColor.colorIndex : null}
+                                            dropTargetColorIndex={dropTarget?.paletteType === 'menuBanner' && dropTarget.teamIndex === teamIndex ? dropTarget.colorIndex : null}
+                                            onColorDragStart={(colorIndex, e) => handleColorDragStart(teamIndex, colorIndex, e)}
+                                            onColorDragOver={handleColorDragOver}
+                                            onColorDragEnter={(colorIndex) => handleColorDragEnter('menuBanner', teamIndex, colorIndex)}
+                                            onColorDragLeave={handleColorDragLeave}
+                                            onColorDrop={(colorIndex) => handleColorDrop('menuBanner', teamIndex, colorIndex)}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             </div>
             {pickerState && pickerState.anchorEl && (
                 <ColorPickerPopover
                     anchorEl={pickerState.anchorEl}
-                    initialColor={processedData[pickerState.teamIndex].homeBannerPalette[pickerState.colorIndex].rgb}
+                    initialColor={
+                        pickerState.paletteType === 'scoreBoard'
+                            ? scoreBoardPalette[pickerState.colorIndex].rgb
+                            : processedData[pickerState.teamIndex!].menuBannerPalette[pickerState.colorIndex].rgb
+                    }
                     onChange={handleColorChange}
                     onClose={handleClosePicker}
                 />
