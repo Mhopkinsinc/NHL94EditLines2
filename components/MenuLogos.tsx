@@ -307,6 +307,12 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         colorIndex: number 
     } | null>(null);
     const [collapsedTeams, setCollapsedTeams] = useState<Set<number>>(new Set());
+    const [romTypeOverride, setRomTypeOverride] = useState<number>(numberOfTeams);
+
+    // Sync the override state if the base ROM changes
+    useEffect(() => {
+        setRomTypeOverride(numberOfTeams);
+    }, [numberOfTeams]);
 
     const toggleTeamCollapse = (teamIndex: number) => {
         setCollapsedTeams(prev => {
@@ -314,6 +320,7 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             if (newSet.has(teamIndex)) {
                 newSet.delete(teamIndex);
             } else {
+// FIX: In `toggleTeamCollapse`, use `teamIndex` instead of the undefined variable `id` when adding to the `collapsedTeams` set.
                 newSet.add(teamIndex);
             }
             return newSet;
@@ -331,8 +338,8 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         const scoreBoardBannerPaletteData = parseGenesisPaletteRGB(romBuffer, scoreBoardBannerPaletteOffset, 16);
         setScoreBoardPalette(scoreBoardBannerPaletteData);
 
-        const romtype = numberOfTeams;
-        const teamcnt = numberOfTeams;
+        const romtype = romTypeOverride;
+        const teamcnt = romTypeOverride;
         const newImgoffsets: ProcessedTeamData[] = [];
 
         const baseOffsets: BaseOffsets = romtype === 32
@@ -379,7 +386,7 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             });
         }
         setProcessedData(newImgoffsets);
-    }, [romBuffer, teams, numberOfTeams]);
+    }, [romBuffer, teams, numberOfTeams, romTypeOverride]);
 
     const handleColorSwatchClick = (teamIndex: number, colorIndex: number, event: React.MouseEvent<HTMLDivElement>) => {
         setPickerState({ paletteType: 'menuBanner', teamIndex, colorIndex, anchorEl: event.currentTarget });
@@ -499,7 +506,21 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
     return (
         <>
             <div className="bg-[#2B3544] p-4 rounded-lg" onDragEnd={() => { setDraggedColor(null); setDropTarget(null); }}>
-                <h2 className="text-2xl font-bold mb-4">Team Assets</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold">Team Assets</h2>
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="rom-type-selector" className="font-semibold text-gray-400">ROM Type:</label>
+                        <select
+                            id="rom-type-selector"
+                            value={romTypeOverride}
+                            onChange={(e) => setRomTypeOverride(Number(e.target.value))}
+                            className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block p-1.5"
+                        >
+                            <option value={30}>30 Team</option>
+                            <option value={32}>32 Team</option>
+                        </select>
+                    </div>
+                </div>
                 <div className="bg-[#212934] p-4 rounded-lg border border-sky-500/20 mb-4">
                     <h3 className="text-lg font-bold text-sky-300">Global Palettes</h3>
                     <PaletteDisplay
