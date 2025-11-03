@@ -37,9 +37,32 @@ interface ProcessedTeamData extends ImageOffsets {
     bannerUrl: string;
     // Store raw tile data to allow for re-rendering with new palettes
     bannerTiles: number[][][]; 
+    menuBannerImageUrl: string;
 }
 
 // --- Image & Palette Parsing Logic ---
+
+/**
+ * Creates a base64 PNG data URL for a two-color striped banner.
+ */
+const createStripePng = (color1: [number, number, number], color2: [number, number, number], width: number, height: number): string => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+
+    const halfHeight = Math.round(height / 2);
+
+    ctx.fillStyle = `rgb(${color1.join(',')})`;
+    ctx.fillRect(0, 0, width, halfHeight);
+
+    ctx.fillStyle = `rgb(${color2.join(',')})`;
+    ctx.fillRect(0, halfHeight, width, height - halfHeight);
+
+    return canvas.toDataURL('image/png');
+};
+
 
 /**
  * Parses 9-bit Sega Genesis palette data into an array of {rgb: [r, g, b], hex: string} objects.
@@ -277,7 +300,9 @@ const PaletteDisplay: React.FC<{
 
 const AssetDisplay: React.FC<{ title: string; offset: number; imageUrl: string }> = ({ title, offset, imageUrl }) => (
     <div className="mt-4">
-        <p className="font-semibold text-gray-400">{title}: <code className="font-mono text-gray-300">0x{offset.toString(16).toUpperCase()}</code></p>
+        <p className="font-semibold text-gray-400">{title}{offset > 0 && (
+            <>: <code className="font-mono text-gray-300">0x{offset.toString(16).toUpperCase()}</code></>
+        )}</p>
         {imageUrl ? (
             <div className="mt-2 bg-black/30 p-2 rounded inline-block">
                 <img src={imageUrl} alt={title} style={{ imageRendering: 'pixelated' }} className="border border-gray-600" />
@@ -360,6 +385,11 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             const logoPaletteData = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
             const menuBannerPaletteData = parseGenesisPaletteRGB(romBuffer, menuBannerPaletteOffset, 16);
 
+            // FIX: Explicitly type color variables as tuples to prevent type widening in the ternary operator, which caused a type error on line 390.
+            const color1: [number, number, number] = menuBannerPaletteData.length > 1 ? menuBannerPaletteData[1].rgb : [0,0,0];
+            const color2: [number, number, number] = menuBannerPaletteData.length > 2 ? menuBannerPaletteData[2].rgb : [0,0,0];
+            const menuBannerImageUrl = createStripePng(color1, color2, 88, 16);
+
             const teamData = teams[count];
             const homePaletteData = teamData ? parsePaletteFromBytes(teamData.homePalette) : [];
             const visitorPaletteData = teamData ? parsePaletteFromBytes(teamData.awayPalette) : [];
@@ -379,10 +409,11 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                 homePalette: homePaletteData,
                 visitorPalette: visitorPaletteData,
                 menuBannerPalette: menuBannerPaletteData,
-                rinkLogoUrl: createPngFromTiles(rinkLogoTiles, homePaletteData.map(c => c.rgb) as [number,number,number][], 6),
-                teamLogoUrl: createPngFromTiles(teamLogoTiles, logoPaletteData.map(c => c.rgb) as [number,number,number][], 6),
-                bannerUrl: createPngFromTiles(bannerTiles, scoreBoardBannerPaletteData.map(c => c.rgb) as [number,number,number][], 11),
+                rinkLogoUrl: createPngFromTiles(rinkLogoTiles, homePaletteData.map(c => c.rgb), 6),
+                teamLogoUrl: createPngFromTiles(teamLogoTiles, logoPaletteData.map(c => c.rgb), 6),
+                bannerUrl: createPngFromTiles(bannerTiles, scoreBoardBannerPaletteData.map(c => c.rgb), 11),
                 bannerTiles,
+                menuBannerImageUrl,
             });
         }
         setProcessedData(newImgoffsets);
@@ -406,21 +437,33 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
 
         if (paletteType === 'scoreBoard') {
             const newPalette = [...scoreBoardPalette];
-            newPalette[colorIndex] = { ...newPalette[colorIndex], rgb: [r, g, b] };
+            // FIX: Cast the new RGB array to a tuple to match the PaletteColor interface, resolving a type error on line 456.
+            newPalette[colorIndex] = { ...newPalette[colorIndex], rgb: [r, g, b] as [number, number, number] };
             setScoreBoardPalette(newPalette);
             
             // Re-render all banners with the new global palette
             setProcessedData(prevProcData => prevProcData.map(team => ({
                 ...team,
-                bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb) as [number,number,number][], 11)
+                bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb), 11)
             })));
         } else if (paletteType === 'menuBanner' && teamIndex !== undefined) {
             setProcessedData(prevData => {
                 return prevData.map((team, index) => {
                     if (index === teamIndex) {
                         const newMenuBannerPalette = [...team.menuBannerPalette];
-                        newMenuBannerPalette[colorIndex] = { ...newMenuBannerPalette[colorIndex], rgb: [r, g, b] };
-                        return { ...team, menuBannerPalette: newMenuBannerPalette };
+                        // FIX: Cast the new RGB array to a tuple to maintain type correctness within the state.
+                        newMenuBannerPalette[colorIndex] = { ...newMenuBannerPalette[colorIndex], rgb: [r, g, b] as [number, number, number] };
+                        
+                        // FIX: Explicitly type color variables as tuples to prevent type widening in the ternary operator.
+                        const color1: [number, number, number] = newMenuBannerPalette.length > 1 ? newMenuBannerPalette[1].rgb : [0,0,0];
+                        const color2: [number, number, number] = newMenuBannerPalette.length > 2 ? newMenuBannerPalette[2].rgb : [0,0,0];
+                        const newMenuBannerImageUrl = createStripePng(color1, color2, 88, 16);
+
+                        return { 
+                            ...team, 
+                            menuBannerPalette: newMenuBannerPalette,
+                            menuBannerImageUrl: newMenuBannerImageUrl
+                        };
                     }
                     return team;
                 });
@@ -475,7 +518,8 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             // Re-render all banners
             setProcessedData(prevProcData => prevProcData.map(team => ({
                 ...team,
-                bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb) as [number,number,number][], 11)
+                // FIX: Ensure the palette data passed to the rendering function is correctly typed by removing the now-unnecessary cast. This resolves a type error on line 528.
+                bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb), 11)
             })));
         } else if (targetPaletteType === 'menuBanner' && targetTeamIndex !== null) {
             setProcessedData(prevData => {
@@ -483,7 +527,17 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                     if (index === targetTeamIndex) {
                         const newMenuBannerPalette = [...team.menuBannerPalette];
                         newMenuBannerPalette[targetColorIndex] = sourceColor;
-                        return { ...team, menuBannerPalette: newMenuBannerPalette };
+                        
+                        // FIX: Explicitly type color variables as tuples to prevent type widening in the ternary operator.
+                        const color1: [number, number, number] = newMenuBannerPalette.length > 1 ? newMenuBannerPalette[1].rgb : [0,0,0];
+                        const color2: [number, number, number] = newMenuBannerPalette.length > 2 ? newMenuBannerPalette[2].rgb : [0,0,0];
+                        const newMenuBannerImageUrl = createStripePng(color1, color2, 88, 16);
+                        
+                        return { 
+                            ...team, 
+                            menuBannerPalette: newMenuBannerPalette,
+                            menuBannerImageUrl: newMenuBannerImageUrl
+                        };
                     }
                     return team;
                 });
@@ -561,7 +615,10 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                                         <AssetDisplay title="Rink Logo" offset={data.rloffset} imageUrl={data.rinkLogoUrl} />
                                         <AssetDisplay title="Team Logo" offset={data.tloffset} imageUrl={data.teamLogoUrl} />
-                                        <AssetDisplay title="Banner" offset={data.banoffset} imageUrl={data.bannerUrl} />
+                                        <div>
+                                            <AssetDisplay title="Banner" offset={data.banoffset} imageUrl={data.bannerUrl} />
+                                            <AssetDisplay title="Menu Banner" offset={0} imageUrl={data.menuBannerImageUrl} />
+                                        </div>
                                     </div>
 
                                     <div className="mt-3 border-t border-gray-700 pt-3">
