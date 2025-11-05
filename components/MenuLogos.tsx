@@ -358,7 +358,8 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             setScoreBoardPalette([]);
             return;
         }
-
+        
+        const romView = new DataView(romBuffer);
         const scoreBoardBannerPaletteOffset = 0x59944;
         const scoreBoardBannerPaletteData = parseGenesisPaletteRGB(romBuffer, scoreBoardBannerPaletteOffset, 16);
         setScoreBoardPalette(scoreBoardBannerPaletteData);
@@ -373,13 +374,20 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
 
         const increments = { rloffset: 0x30A, tloffset: 0x4D6, lpoffset: 0x20, banoffset: 0x2C0, hvpaloffset: 0x40 };
         const imageByteSizes = { rinkLogo: 0x300, teamLogo: 0x480, banner: 0x2C0 };
+        const TEAM_LOGO_POINTER_TABLE_OFFSET = romtype === 32 ? 0x180E : 0x16be;
+
 
         for (let count = 0; count < teamcnt; count++) {
             const rloffset = parseInt(baseOffsets.rloffset, 16) + increments.rloffset * count;
-            const tloffset = parseInt(baseOffsets.tloffset, 16) + increments.tloffset * count;
             const lpoffset = parseInt(baseOffsets.lpoffset, 16) + increments.lpoffset * count;
             const banoffset = parseInt(baseOffsets.banoffset, 16) + increments.banoffset * count;
             const hvpaloffset = parseInt(baseOffsets.hvpaloffset, 16) + increments.hvpaloffset * count;
+            
+            // Read Team Logo offset from the pointer table
+            const pointerOffset = TEAM_LOGO_POINTER_TABLE_OFFSET + (count * 4);
+            const logoPointer = romView.getUint32(pointerOffset, false);
+            const tloffset = logoPointer + 0xA;
+
             const menuBannerPaletteOffset = hvpaloffset;
             
             const logoPaletteData = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
