@@ -345,7 +345,6 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             if (newSet.has(teamIndex)) {
                 newSet.delete(teamIndex);
             } else {
-// FIX: In `toggleTeamCollapse`, use `teamIndex` instead of the undefined variable `id` when adding to the `collapsedTeams` set.
                 newSet.add(teamIndex);
             }
             return newSet;
@@ -360,8 +359,12 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         }
         
         const romView = new DataView(romBuffer);
+        const romSize = romBuffer.byteLength;
         const scoreBoardBannerPaletteOffset = 0x59944;
-        const scoreBoardBannerPaletteData = parseGenesisPaletteRGB(romBuffer, scoreBoardBannerPaletteOffset, 16);
+        
+        const scoreBoardBannerPaletteData = (scoreBoardBannerPaletteOffset + 32 <= romSize)
+            ? parseGenesisPaletteRGB(romBuffer, scoreBoardBannerPaletteOffset, 16)
+            : Array(16).fill({ rgb: [0, 0, 0], hex: '0x0000' });
         setScoreBoardPalette(scoreBoardBannerPaletteData);
 
         const romtype = romTypeOverride;
@@ -382,18 +385,26 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             const lpoffset = parseInt(baseOffsets.lpoffset, 16) + increments.lpoffset * count;
             const banoffset = parseInt(baseOffsets.banoffset, 16) + increments.banoffset * count;
             const hvpaloffset = parseInt(baseOffsets.hvpaloffset, 16) + increments.hvpaloffset * count;
-            
-            // Read Team Logo offset from the pointer table
+
             const pointerOffset = TEAM_LOGO_POINTER_TABLE_OFFSET + (count * 4);
-            const logoPointer = romView.getUint32(pointerOffset, false);
-            const tloffset = logoPointer + 0xA;
-
-            const menuBannerPaletteOffset = hvpaloffset;
             
-            const logoPaletteData = parseGenesisPaletteRGB(romBuffer, lpoffset, 16);
-            const menuBannerPaletteData = parseGenesisPaletteRGB(romBuffer, menuBannerPaletteOffset, 16);
+            let tloffset = romSize; // Default to an out-of-bounds value
+            if (pointerOffset + 4 <= romSize) {
+                const logoPointer = romView.getUint32(pointerOffset, false);
+                tloffset = logoPointer + 0xA;
+            }
+            
+            const menuBannerPaletteOffset = hvpaloffset;
+            const defaultPalette = Array(16).fill({ rgb: [0, 0, 0], hex: '0x0000' });
+            
+            const logoPaletteData = (lpoffset + 32 <= romSize)
+                ? parseGenesisPaletteRGB(romBuffer, lpoffset, 16)
+                : defaultPalette;
 
-            // FIX: Explicitly type color variables as tuples to prevent type widening in the ternary operator, which caused a type error on line 390.
+            const menuBannerPaletteData = (menuBannerPaletteOffset + 32 <= romSize)
+                ? parseGenesisPaletteRGB(romBuffer, menuBannerPaletteOffset, 16)
+                : defaultPalette;
+
             const color1: [number, number, number] = menuBannerPaletteData.length > 1 ? menuBannerPaletteData[1].rgb : [0,0,0];
             const color2: [number, number, number] = menuBannerPaletteData.length > 2 ? menuBannerPaletteData[2].rgb : [0,0,0];
             const menuBannerImageUrl = createStripePng(color1, color2, 88, 16);
@@ -404,9 +415,17 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             const homePaletteOffset = teamData ? teamData.teamPointer + 12 : 0;
             const awayPaletteOffset = teamData ? teamData.teamPointer + 44 : 0;
             
-            const rinkLogoTiles = parseTiles(new Uint8Array(romBuffer, rloffset, imageByteSizes.rinkLogo));
-            const teamLogoTiles = parseTiles(new Uint8Array(romBuffer, tloffset, imageByteSizes.teamLogo));
-            const bannerTiles = parseTiles(new Uint8Array(romBuffer, banoffset, imageByteSizes.banner));
+            const rinkLogoTiles = (rloffset + imageByteSizes.rinkLogo <= romSize)
+                ? parseTiles(new Uint8Array(romBuffer, rloffset, imageByteSizes.rinkLogo))
+                : [];
+            
+            const teamLogoTiles = (tloffset + imageByteSizes.teamLogo <= romSize)
+                ? parseTiles(new Uint8Array(romBuffer, tloffset, imageByteSizes.teamLogo))
+                : [];
+
+            const bannerTiles = (banoffset + imageByteSizes.banner <= romSize)
+                ? parseTiles(new Uint8Array(romBuffer, banoffset, imageByteSizes.banner))
+                : [];
 
             newImgoffsets.push({
                 teamName: teamData ? `${teamData.city} ${teamData.name}` : `Team ${count + 1}`,
@@ -445,7 +464,6 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
 
         if (paletteType === 'scoreBoard') {
             const newPalette = [...scoreBoardPalette];
-            // FIX: Cast the new RGB array to a tuple to match the PaletteColor interface, resolving a type error on line 456.
             newPalette[colorIndex] = { ...newPalette[colorIndex], rgb: [r, g, b] as [number, number, number] };
             setScoreBoardPalette(newPalette);
             
@@ -459,10 +477,8 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                 return prevData.map((team, index) => {
                     if (index === teamIndex) {
                         const newMenuBannerPalette = [...team.menuBannerPalette];
-                        // FIX: Cast the new RGB array to a tuple to maintain type correctness within the state.
                         newMenuBannerPalette[colorIndex] = { ...newMenuBannerPalette[colorIndex], rgb: [r, g, b] as [number, number, number] };
                         
-                        // FIX: Explicitly type color variables as tuples to prevent type widening in the ternary operator.
                         const color1: [number, number, number] = newMenuBannerPalette.length > 1 ? newMenuBannerPalette[1].rgb : [0,0,0];
                         const color2: [number, number, number] = newMenuBannerPalette.length > 2 ? newMenuBannerPalette[2].rgb : [0,0,0];
                         const newMenuBannerImageUrl = createStripePng(color1, color2, 88, 16);
@@ -526,7 +542,6 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
             // Re-render all banners
             setProcessedData(prevProcData => prevProcData.map(team => ({
                 ...team,
-                // FIX: Ensure the palette data passed to the rendering function is correctly typed by removing the now-unnecessary cast. This resolves a type error on line 528.
                 bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb), 11)
             })));
         } else if (targetPaletteType === 'menuBanner' && targetTeamIndex !== null) {
@@ -536,7 +551,6 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                         const newMenuBannerPalette = [...team.menuBannerPalette];
                         newMenuBannerPalette[targetColorIndex] = sourceColor;
                         
-                        // FIX: Explicitly type color variables as tuples to prevent type widening in the ternary operator.
                         const color1: [number, number, number] = newMenuBannerPalette.length > 1 ? newMenuBannerPalette[1].rgb : [0,0,0];
                         const color2: [number, number, number] = newMenuBannerPalette.length > 2 ? newMenuBannerPalette[2].rgb : [0,0,0];
                         const newMenuBannerImageUrl = createStripePng(color1, color2, 88, 16);
