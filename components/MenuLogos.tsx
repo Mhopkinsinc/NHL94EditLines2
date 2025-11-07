@@ -314,20 +314,21 @@ const AssetDisplay: React.FC<{ title: string; offset: number; imageUrl: string }
 
 export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInfo[], numberOfTeams: number }> = ({ romBuffer, teams, numberOfTeams }) => {
     const [processedData, setProcessedData] = useState<ProcessedTeamData[]>([]);
+    const [iceRinkPalette, setIceRinkPalette] = useState<PaletteColor[]>([]);
     const [scoreBoardPalette, setScoreBoardPalette] = useState<PaletteColor[]>([]);
     const [pickerState, setPickerState] = useState<{ 
-        paletteType: 'menuBanner' | 'scoreBoard';
+        paletteType: 'menuBanner' | 'scoreBoard' | 'iceRink';
         teamIndex?: number;
         colorIndex: number; 
         anchorEl: HTMLElement 
     } | null>(null);
     const [draggedColor, setDraggedColor] = useState<{ 
-        paletteType: 'menuBanner' | 'scoreBoard';
+        paletteType: 'menuBanner' | 'scoreBoard' | 'iceRink';
         teamIndex?: number;
         colorIndex: number 
     } | null>(null);
     const [dropTarget, setDropTarget] = useState<{ 
-        paletteType: 'menuBanner' | 'scoreBoard';
+        paletteType: 'menuBanner' | 'scoreBoard' | 'iceRink';
         teamIndex?: number;
         colorIndex: number 
     } | null>(null);
@@ -354,6 +355,7 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
     useEffect(() => {
         if (!romBuffer || teams.length === 0) {
             setProcessedData([]);
+            setIceRinkPalette([]);
             setScoreBoardPalette([]);
             return;
         }
@@ -361,11 +363,17 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         const romView = new DataView(romBuffer);
         const romSize = romBuffer.byteLength;
         const scoreBoardBannerPaletteOffset = 0x59944;
+        const iceRinkPaletteOffset = 0x59924;
         
         const scoreBoardBannerPaletteData = (scoreBoardBannerPaletteOffset + 32 <= romSize)
             ? parseGenesisPaletteRGB(romBuffer, scoreBoardBannerPaletteOffset, 16)
             : Array(16).fill({ rgb: [0, 0, 0], hex: '0x0000' });
         setScoreBoardPalette(scoreBoardBannerPaletteData);
+
+        const iceRinkPaletteData = (iceRinkPaletteOffset + 32 <= romSize)
+            ? parseGenesisPaletteRGB(romBuffer, iceRinkPaletteOffset, 16)
+            : Array(16).fill({ rgb: [0, 0, 0], hex: '0x0000' });
+        setIceRinkPalette(iceRinkPaletteData);
 
         const romtype = romTypeOverride;
         const teamcnt = romTypeOverride;
@@ -454,6 +462,10 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         setPickerState({ paletteType: 'scoreBoard', colorIndex, anchorEl: event.currentTarget });
     };
 
+    const handleIceRinkColorClick = (colorIndex: number, event: React.MouseEvent<HTMLDivElement>) => {
+        setPickerState({ paletteType: 'iceRink', colorIndex, anchorEl: event.currentTarget });
+    };
+
     const handleColorChange = (newColorHex: string) => {
         if (!pickerState) return;
         const { paletteType, teamIndex, colorIndex } = pickerState;
@@ -472,6 +484,10 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                 ...team,
                 bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb), 11)
             })));
+        } else if (paletteType === 'iceRink') {
+            const newPalette = [...iceRinkPalette];
+            newPalette[colorIndex] = { ...newPalette[colorIndex], rgb: [r, g, b] as [number, number, number] };
+            setIceRinkPalette(newPalette);
         } else if (paletteType === 'menuBanner' && teamIndex !== undefined) {
             setProcessedData(prevData => {
                 return prevData.map((team, index) => {
@@ -508,12 +524,17 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         setDraggedColor({ paletteType: 'scoreBoard', colorIndex });
         e.dataTransfer.effectAllowed = 'copy';
     };
+
+    const handleIceRinkDragStart = (colorIndex: number, e: React.DragEvent) => {
+        setDraggedColor({ paletteType: 'iceRink', colorIndex });
+        e.dataTransfer.effectAllowed = 'copy';
+    };
     
     const handleColorDragOver = (e: React.DragEvent) => {
         e.preventDefault(); // Necessary to allow dropping
     };
     
-    const handleColorDragEnter = (paletteType: 'menuBanner' | 'scoreBoard', teamIndex: number | null, colorIndex: number) => {
+    const handleColorDragEnter = (paletteType: 'menuBanner' | 'scoreBoard' | 'iceRink', teamIndex: number | null, colorIndex: number) => {
         if (draggedColor) {
             setDropTarget({ paletteType, teamIndex: teamIndex ?? undefined, colorIndex });
         }
@@ -523,13 +544,15 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
         setDropTarget(null);
     };
     
-    const handleColorDrop = (targetPaletteType: 'menuBanner' | 'scoreBoard', targetTeamIndex: number | null, targetColorIndex: number) => {
+    const handleColorDrop = (targetPaletteType: 'menuBanner' | 'scoreBoard' | 'iceRink', targetTeamIndex: number | null, targetColorIndex: number) => {
         if (!draggedColor || !dropTarget) return;
 
         // Get the source color data
         let sourceColor: PaletteColor;
         if (draggedColor.paletteType === 'scoreBoard') {
             sourceColor = scoreBoardPalette[draggedColor.colorIndex];
+        } else if (draggedColor.paletteType === 'iceRink') {
+            sourceColor = iceRinkPalette[draggedColor.colorIndex];
         } else {
             sourceColor = processedData[draggedColor.teamIndex!].menuBannerPalette[draggedColor.colorIndex];
         }
@@ -544,6 +567,10 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                 ...team,
                 bannerUrl: createPngFromTiles(team.bannerTiles, newPalette.map(c => c.rgb), 11)
             })));
+        } else if (targetPaletteType === 'iceRink') {
+            const newPalette = [...iceRinkPalette];
+            newPalette[targetColorIndex] = sourceColor;
+            setIceRinkPalette(newPalette);
         } else if (targetPaletteType === 'menuBanner' && targetTeamIndex !== null) {
             setProcessedData(prevData => {
                 return prevData.map((team, index) => {
@@ -599,6 +626,19 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                 </div>
                 <div className="bg-[#212934] p-4 rounded-lg border border-sky-500/20 mb-4">
                     <h3 className="text-lg font-bold text-sky-300">Global Palettes</h3>
+                    <PaletteDisplay
+                        title={`Ice and Rink Palette (0x59924)`}
+                        colors={iceRinkPalette}
+                        onColorClick={(colorIndex, event) => handleIceRinkColorClick(colorIndex, event)}
+                        isDraggable={true}
+                        draggedColorIndex={draggedColor?.paletteType === 'iceRink' ? draggedColor.colorIndex : null}
+                        dropTargetColorIndex={dropTarget?.paletteType === 'iceRink' ? dropTarget.colorIndex : null}
+                        onColorDragStart={(colorIndex, e) => handleIceRinkDragStart(colorIndex, e)}
+                        onColorDragOver={handleColorDragOver}
+                        onColorDragEnter={(colorIndex) => handleColorDragEnter('iceRink', null, colorIndex)}
+                        onColorDragLeave={handleColorDragLeave}
+                        onColorDrop={(colorIndex) => handleColorDrop('iceRink', null, colorIndex)}
+                    />
                     <PaletteDisplay
                         title={`Scoreboard Banner Palette (0x59944)`}
                         colors={scoreBoardPalette}
@@ -673,7 +713,9 @@ export const MenuLogos: React.FC<{ romBuffer: ArrayBuffer | null, teams: TeamInf
                     initialColor={
                         pickerState.paletteType === 'scoreBoard'
                             ? scoreBoardPalette[pickerState.colorIndex].rgb
-                            : processedData[pickerState.teamIndex!].menuBannerPalette[pickerState.colorIndex].rgb
+                            : pickerState.paletteType === 'iceRink'
+                                ? iceRinkPalette[pickerState.colorIndex].rgb
+                                : processedData[pickerState.teamIndex!].menuBannerPalette[pickerState.colorIndex].rgb
                     }
                     onChange={handleColorChange}
                     onClose={handleClosePicker}
